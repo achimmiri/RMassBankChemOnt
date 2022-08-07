@@ -81,7 +81,7 @@ parseMbRecord <- function(filename, readAnnotation = TRUE)
     ##This not a real tag anymore(according to the specifications) but RMassBank still writes it...?
     ##I'll include it for the case that I'm reading V1-records
     ac_ms[['IONIZATION']] <- substring(grep('AC$MASS_SPECTROMETRY: IONIZATION',record, value = TRUE, fixed = TRUE),34)
-    ac_ms[['ION_MODE']] <- substring(grep('AC$ANALYTICAL_CONDITION: MODE',record, value = TRUE, fixed = TRUE),31)
+    ac_ms[['ION_MODE']] <- substring(grep('AC$MASS_SPECTROMETRY: ION_MODE',record, value = TRUE, fixed = TRUE),32)
     
   } else{
     ac_ms[['ION_MODE']] <- substring(grep('AC$MASS_SPECTROMETRY: ION_MODE',record, value = TRUE, fixed = TRUE),32)
@@ -100,11 +100,6 @@ parseMbRecord <- function(filename, readAnnotation = TRUE)
     ac_ms[['REAGENT_GAS']] <- substring(grep('AC$MASS_SPECTROMETRY: REAGENT_GAS',record, value = TRUE, fixed = TRUE),35)
     ac_ms[['SCANNING']] <- substring(grep('AC$MASS_SPECTROMETRY: SCANNING',record, value = TRUE, fixed = TRUE),32)
     
-    ##These are in RMassBank, but not part of the specification?
-    ##I think I'm misreading something...
-    #ac_ms[['FRAGMENTATION_MODE']] <- msmsdata$info$mode
-    #ac_ms[['PRECURSOR_TYPE']] <- precursor_types[spec$mode]
-    #ac_ms[['RESOLUTION']] <- msmsdata$info$res
     
     ac_lc <- list();
     ac_lc[['CAPILLARY_VOLTAGE']] <- substring(grep('AC$CHROMATOGRAPHY: CAPILLARY_VOLTAGE',record, value = TRUE, fixed = TRUE),36)

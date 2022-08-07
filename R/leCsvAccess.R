@@ -623,6 +623,8 @@ findMz.formula <- function(formula, mode="pH", ppm=10, deltaMz=0)
 findMz <- function(cpdID, mode="pH", ppm=10, deltaMz=0, retrieval="standard",
                    unknownMass = getOption("RMassBank")$unknownMass)
 {
+	
+
   if(is.null(unknownMass))
     unknownMass = "charged"
   if(!(unknownMass %in% c("charged", "neutral")))
@@ -652,14 +654,68 @@ findMz <- function(cpdID, mode="pH", ppm=10, deltaMz=0, retrieval="standard",
             stop("There was no matching SMILES-entry to the supplied cpdID(s) \n  Please check the cpdIDs and the compoundlist.")
             return(list(mzMin=NA,mzMax=NA,mzCenter=NA))
         }
+
         formula <- .get.mol2formula(getMolecule(s))
         return(findMz.formula(formula@string, mode, ppm, deltaMz))
     }
 }
 
+
+findBpeak <- function(cpdID) {
+
+        if(is.null(.listEnvEnv$listEnv))
+                stop("Compound list must be loaded first.")
+        if(!exists("compoundList", where=.listEnvEnv$listEnv))
+                stop("Compound list must be loaded first.")
+        if(is.character(cpdID))
+                cpdID <- as.numeric(cpdID)
+        rt <- as.numeric(.listEnvEnv$listEnv$compoundList[which(.listEnvEnv$listEnv$compoundList$ID == cpdID),"Bpeak"])
+        if(!is.null(getOption("RMassBank")$rtShift))
+                rt <- rt + getOption("RMassBank")$rtShift
+        if(is.na(rt)) return(list(RT=NA))
+        else return(list(RT=rt))
+}
+
+
+findCenergy <- function(cpdID) {
+
+        if(is.null(.listEnvEnv$listEnv))
+                stop("Compound list must be loaded first.")
+        if(!exists("compoundList", where=.listEnvEnv$listEnv))
+                stop("Compound list must be loaded first.")
+        if(is.character(cpdID))
+                cpdID <- as.numeric(cpdID)
+        rt <- as.numeric(.listEnvEnv$listEnv$compoundList[which(.listEnvEnv$listEnv$compoundList$ID == cpdID),"Cenergy"])
+        if(!is.null(getOption("RMassBank")$rtShift))
+                rt <- rt + getOption("RMassBank")$rtShift
+        if(is.na(rt)) return(list(RT=NA))
+        else return(list(RT=rt))
+}
+
+
+findIM <- function(cpdID) {
+
+        if(is.null(.listEnvEnv$listEnv))
+                stop("Compound list must be loaded first.")
+        if(!exists("compoundList", where=.listEnvEnv$listEnv))
+                stop("Compound list must be loaded first.")
+        if(is.character(cpdID))
+                cpdID <- as.numeric(cpdID)
+        rt <- as.numeric(.listEnvEnv$listEnv$compoundList[which(.listEnvEnv$listEnv$compoundList$ID == cpdID),"IM"])
+        if(!is.null(getOption("RMassBank")$rtShift))
+                rt <- rt + getOption("RMassBank")$rtShift
+        if(is.na(rt)) return(list(RT=NA))
+        else return(list(RT=rt))
+}
+
+
+
+
+
 #findMz <- function(...)	findMz.rcdk(...)
 #' @export
 findRt <- function(cpdID) {
+
 	if(is.null(.listEnvEnv$listEnv))
 		stop("Compound list must be loaded first.")
 	if(!exists("compoundList", where=.listEnvEnv$listEnv))

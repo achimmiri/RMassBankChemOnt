@@ -347,11 +347,12 @@ msmsRead.RAW <- function(w, xRAW = NULL, cpdids = NULL, mode, findPeaksArgs = NU
 	requireNamespace("CAMERA",quietly=TRUE)
 	
 	parentMass <- findMz(cpdids[1], mode=mode)$mzCenter
+
 	if(is.na(parentMass)){
 		stop(paste("There was no matching entry to the supplied cpdID", cpdids[1] ,"\n Please check the cpdIDs and the compoundlist."))
 	}
 		
-	RT <- findRt(cpdids[1])$RT * 60
+	RT <- findRt(cpdids[1])$RT
 	mzabs <- 0.1
 	
 	getRT <- function(xa) {

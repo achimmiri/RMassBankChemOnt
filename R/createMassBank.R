@@ -30,6 +30,49 @@
 #' 	mb <- loadInfolist(mb, "my_csv_infolist.csv")}
 #' 
 #' @export
+
+### adding this new function here 
+
+##callFC<-function(NL)
+##{
+  ##dat <- data.frame()
+
+  ##for(i in 1:length(NL))
+ ## {
+    ##print(i)
+   ## LV<-NL[[i]]
+   ## LV1<-data.frame(t(rapply(LV, function(x) x[1])))
+   ## dat <- rbind(dat,LV1)
+
+ ## }
+
+ ## return(dat)
+
+##}
+
+
+callFC<-function(NL)
+{
+  dat <- data.frame()
+
+  for(i in 1:length(NL))
+  {
+    ##print(i)
+    LV<-NL[[i]]
+    LV1<-data.frame(t(rapply(LV, function(x) x[1])))
+    dat <- rbind(dat,LV1)
+
+  }
+
+  CNAM<-names(rlist::list.flatten(dat))
+  CNAM[which(CNAM=="MS.FOCUSED_ION.PRECURSOR_TYPE.PRECURSOR_TYPE")]="MS.FOCUSED_ION.PRECURSOR_TYPE"
+  names(dat)<-CNAM
+  return(dat)
+
+}
+
+
+
 loadInfolists <- function(mb, path)
 {
   archivefiles <- list.files(path, ".csv", full.names=TRUE)
@@ -49,6 +92,7 @@ loadInfolist <- function(mb, fileName)
   if(ncol(mb@mbdata_archive) == 0)
     mb <- resetInfolists(mb)
   mbdata_new <- read.csv(fileName, sep=",", stringsAsFactors=FALSE)
+
   # Legacy check for loading the Uchem format files.
   # Even if dbname_* are not used downstream of here, it's still good to keep them
   # for debugging reasons.
@@ -57,6 +101,9 @@ loadInfolist <- function(mb, fileName)
   
   # Check if comma-separated or semicolon-separated
   d <- setdiff(cols, n)
+  
+
+
   if(length(d)>0){
 		mbdata_new <- read.csv2(fileName, stringsAsFactors=FALSE)
 		n <- colnames(mbdata_new)
@@ -104,7 +151,8 @@ loadInfolist <- function(mb, fileName)
   
   for(colname in colnames(mb@mbdata_archive))
     mb@mbdata_archive[, colname] <- as.character(mb@mbdata_archive[, colname])
-  
+    
+
   for(entry in old_entries)
     mb@mbdata_archive[mb@mbdata_archive$id == entry,] <- mbdata_new[mbdata_new$id == entry,]
   mb@mbdata_archive <- rbind(mb@mbdata_archive, mbdata_new[mbdata_new$id==new_entries,])
@@ -128,13 +176,20 @@ resetInfolists <- function(mb)
 							CH.FORMULA = character(0), CH.EXACT_MASS = numeric(0), CH.SMILES = character(0), 
 							CH.IUPAC = character(0), CH.LINK.CAS = character(0), CH.LINK.CHEBI = integer(0), 
 							CH.LINK.HMDB = character(0), CH.LINK.KEGG = character(0), CH.LINK.LIPIDMAPS = character(0), 
-							CH.LINK.PUBCHEM = character(0), CH.LINK.INCHIKEY = character(0), 
-							CH.LINK.CHEMSPIDER = integer(0), CH.LINK.COMPTOX = character(0)), .Names = c("X", "id", "dbcas", 
-							"dbname", "dataused", "COMMENT.CONFIDENCE", "COMMENT.ID", 
-              "CH.NAME1", "CH.NAME2", "CH.NAME3", "CH.NAME4", "CH.NAME5", "CH.COMPOUND_CLASS", "CH.FORMULA", 
+							CH.LINK.PUBCHEM = character(0), CH.LINK.INCHIKEY = character(0), CH.LINK.ChemOnt = character(0),
+							CH.LINK.CHEMSPIDER = integer(0), CH.LINK.COMPTOX = character(0), MS.FOCUSED_ION.PRECURSOR_TYPE = character(0), 
+							MS.FOCUSED_ION.BASE_PEAK = character(0), MS.FOCUSED_ION.PRECURSOR_MZ = character(0), 
+							AC.MASS_SPECTROMETRY.COLLISION_ENERGY = character(0), AC.MASS_SPECTROMETRY.ION_MODE = character(0)), 
+				  .Names = c("X", "id", "dbcas","dbname", "dataused", "COMMENT.CONFIDENCE", "COMMENT.ID", 
+              				     "CH.NAME1", "CH.NAME2", "CH.NAME3", "CH.NAME4", "CH.NAME5", "CH.COMPOUND_CLASS", "CH.FORMULA", 
 							"CH.EXACT_MASS", "CH.SMILES", "CH.IUPAC", "CH.LINK.CAS", "CH.LINK.CHEBI", 
 							"CH.LINK.HMDB", "CH.LINK.KEGG", "CH.LINK.LIPIDMAPS", "CH.LINK.PUBCHEM",
-							"CH.LINK.INCHIKEY", "CH.LINK.CHEMSPIDER", "CH.LINK.COMPTOX"), row.names = integer(0), class = "data.frame")
+							"CH.LINK.INCHIKEY","CH.LINK.ChemOnt" ,"CH.LINK.CHEMSPIDER", "CH.LINK.COMPTOX", "MS.FOCUSED_ION.PRECURSOR_TYPE", 
+							"MS.FOCUSED_ION.BASE_PEAK", "MS.FOCUSED_ION.PRECURSOR_MZ", "AC.MASS_SPECTROMETRY.COLLISION_ENERGY",
+							"AC.MASS_SPECTROMETRY.ION_MODE"), 
+				  row.names = integer(0), 
+				  class = "data.frame"
+			)
 	if(getOption("RMassBank")$include_sp_tags)
 	{
 	  mb@mbdata_archive["SP.SAMPLE"] <- character(0)
@@ -204,6 +259,7 @@ mbWorkflow <- function(mb, steps=c(1,2,3,4,5,6,7,8), infolist_path="./infolist.c
     # compounds, pull information from CTS (using gatherData).
     if(1 %in% steps)
     {
+
         mbdata_ids <- lapply(selectSpectra(mb@spectra, "found", "object"), function(spec) spec@id)
                 rmb_log_info("mbWorkflow: Step 1. Gather info from several databases")
       # Which IDs are not in mbdata_archive yet?
@@ -232,9 +288,13 @@ mbWorkflow <- function(mb, steps=c(1,2,3,4,5,6,7,8), infolist_path="./infolist.c
   if(2 %in% steps)
   {
 	rmb_log_info("mbWorkflow: Step 2. Export infolist (if required)")
+
     if(length(mb@mbdata)>0)
     {
-      mbdata_mat <- flatten(mb@mbdata)
+	    
+      ##mbdata_mat <- flatten(mb@mbdata)
+      mbdata_mat <- callFC(mb@mbdata)
+
       write.csv(as.data.frame(mbdata_mat),infolist_path, na="")
             rmb_log_info(paste("The file", infolist_path, "was generated with new compound information. Please check and edit the table, and add it to your infolist folder."))
       return(mb)
@@ -262,7 +322,8 @@ mbWorkflow <- function(mb, steps=c(1,2,3,4,5,6,7,8), infolist_path="./infolist.c
 				  if(filter)
             res <- buildRecord(r, mbdata=mbdata, additionalPeaks=mb@additionalPeaks, filter = filterOK & best)
 				  else
-				    res <- buildRecord(r, mbdata=mbdata, additionalPeaks=mb@additionalPeaks)
+
+				    res <- buildRecord(r, mbdata=mbdata, additionalPeaks=mb@additionalPeaks, adductInformation = mbdata$MS.FOCUSED_ION.PRECURSOR_TYPE$PRECURSOR_TYPE)
           return(res)
 			  })
 	  # check which compounds have useful spectra
@@ -381,6 +442,7 @@ mbWorkflow <- function(mb, steps=c(1,2,3,4,5,6,7,8), infolist_path="./infolist.c
 createMolfile <- function(id_or_smiles, fileName = FALSE)
 {
 	.checkMbSettings()
+
 	babeldir <- getOption("RMassBank")$babeldir
     
 	if(!is.numeric(id_or_smiles)){
@@ -489,52 +551,110 @@ gatherPubChem <- function(key){
 	return(PubChemData)
 }
 
-# Retrieve annotation data for a compound, from the internet services Cactvs, Pubchem, Chemspider and CTS.
-#' Retrieve annotation data
-#' 
-#' Retrieves annotation data for a compound from the internet services CTS, Pubchem, Chemspider and
-#' Cactvs, based on the SMILES code and name of the compounds stored in the
-#' compound list.
-#' 
-#' Composes the "upper part" of a MassBank record filled with chemical data
-#' about the compound: name, exact mass, structure, CAS no., links to PubChem,
-#' KEGG, ChemSpider.  The instrument type is also written into this block (even
-#' if not strictly part of the chemical information). Additionally, index
-#' fields are added at the start of the record, which will be removed later:
-#' \code{id, dbcas, dbname} from the compound list, \code{dataused} to indicate
-#' the used identifier for CTS search (\code{smiles} or \code{dbname}).
-#' 
-#' Additionally, the fields \code{ACCESSION} and \code{RECORD_TITLE} are
-#' inserted empty and will be filled later on.
-#' 
-#' @usage gatherData(id)
-#' @aliases gatherData
-#' @param id The compound ID.
-#' @return Returns a list of type \code{list(id= \var{compoundID}, ...,
-#' 'ACCESSION' = '', 'RECORD_TITLE' = '', )} etc. %% ...
-#' @author Michael Stravs
-#' @seealso \code{\link{mbWorkflow}}
-#' @references Chemical Translation Service:
-#' \url{http://uranus.fiehnlab.ucdavis.edu:8080/cts/homePage} 
-#' cactus Chemical Identifier Resolver: 
-#' \url{http://cactus.nci.nih.gov/chemical/structure}
-#' MassBank record format:
-#' \url{http://www.massbank.jp/manuals/MassBankRecord_en.pdf}
-#' Pubchem REST:
-#' \url{https://pubchem.ncbi.nlm.nih.gov/pug_rest/PUG_REST.html}
-#' Chemspider InChI conversion:
-#' \url{https://www.chemspider.com/InChI.asmx}
-#' @examples
-#' 
-#' # Gather data for compound ID 131
-#' \dontrun{gatherData(131)}
-#' 
 #' @export
+
+findOnt <- function(cpdID) {
+
+  if(is.character(cpdID))
+    cpdID <- as.numeric(cpdID)
+  if(is.null(.listEnvEnv$listEnv))
+    stop("Compound list must be loaded first.")
+  if(!exists("compoundList", where=.listEnvEnv$listEnv))
+    stop("Compound list must be loaded first.")
+  if(.listEnvEnv$listEnv$compoundList[match(cpdID, .listEnvEnv$listEnv$compoundList$ID),"Ontology"] == "")
+    return(NA)
+  return(.listEnvEnv$listEnv$compoundList[match(cpdID, .listEnvEnv$listEnv$compoundList$ID),"Ontology"])
+}
+
+PRECURSORTYPE<- function(cpdID){
+
+	if(is.character(cpdID))
+    cpdID <- as.numeric(cpdID)
+  if(is.null(.listEnvEnv$listEnv))
+    stop("Compound list must be loaded first.")
+  if(!exists("compoundList", where=.listEnvEnv$listEnv))
+    stop("Compound list must be loaded first.")
+  if(.listEnvEnv$listEnv$compoundList[match(cpdID, .listEnvEnv$listEnv$compoundList$ID),"Adduct"] == "")
+    return(NA)
+  return(.listEnvEnv$listEnv$compoundList[match(cpdID, .listEnvEnv$listEnv$compoundList$ID),"Adduct"])
+
+}
+
+
+findBpeak <- function(cpdID) {
+
+        if(is.character(cpdID))
+		cpdID <- as.numeric(cpdID)
+        if(is.null(.listEnvEnv$listEnv))
+                stop("Compound list must be loaded first.")
+        if(!exists("compoundList", where=.listEnvEnv$listEnv))
+                stop("Compound list must be loaded first.")
+	if(.listEnvEnv$listEnv$compoundList[match(cpdID, .listEnvEnv$listEnv$compoundList$ID),"Bpeak"] == "")
+    	  return(NA)
+  	return(.listEnvEnv$listEnv$compoundList[match(cpdID, .listEnvEnv$listEnv$compoundList$ID),"Bpeak"])
+
+}
+
+findCenergy <- function(cpdID) {
+
+	if(is.character(cpdID))
+		cpdID <- as.numeric(cpdID)
+        if(is.null(.listEnvEnv$listEnv))
+                stop("Compound list must be loaded first.")
+        if(!exists("compoundList", where=.listEnvEnv$listEnv))
+                stop("Compound list must be loaded first.")
+	if(.listEnvEnv$listEnv$compoundList[match(cpdID, .listEnvEnv$listEnv$compoundList$ID),"Cenergy"] == "")
+	  return(NA)
+	return(.listEnvEnv$listEnv$compoundList[match(cpdID, .listEnvEnv$listEnv$compoundList$ID),"Cenergy"])
+
+}
+
+findIM <- function(cpdID) {
+
+	if(is.character(cpdID))
+		cpdID <- as.numeric(cpdID)
+        if(is.null(.listEnvEnv$listEnv))
+                stop("Compound list must be loaded first.")
+        if(!exists("compoundList", where=.listEnvEnv$listEnv))
+                stop("Compound list must be loaded first.")
+	if(.listEnvEnv$listEnv$compoundList[match(cpdID, .listEnvEnv$listEnv$compoundList$ID),"IM"] == "")
+	 return(NA)
+	return(.listEnvEnv$listEnv$compoundList[match(cpdID, .listEnvEnv$listEnv$compoundList$ID),"IM"])
+
+}
+
+findNAME <- function(cpdID) {
+
+	if(is.character(cpdID))
+		cpdID <- as.numeric(cpdID)
+	if(is.null(.listEnvEnv$listEnv))
+                stop("Compound list must be loaded first.")
+        if(!exists("compoundList", where=.listEnvEnv$listEnv))
+                stop("Compound list must be loaded first.")
+	if(.listEnvEnv$listEnv$compoundList[match(cpdID, .listEnvEnv$listEnv$compoundList$ID),"Name"] == "")
+		return(NA)
+	return(.listEnvEnv$listEnv$compoundList[match(cpdID, .listEnvEnv$listEnv$compoundList$ID),"Name"])
+
+}
+
+smiles2mass <- function(SMILES){
+        massfromformula <- parse.smiles(SMILES)[[1]]
+        set.atom.types(massfromformula)
+        do.aromaticity(massfromformula)
+        convert.implicit.to.explicit(massfromformula)
+        do.isotopes(massfromformula)
+        mass <- get.exact.mass(massfromformula)
+        return(mass)
+}
+
+
+
 gatherData <- function(id)
 { 
 	##Preamble: Is a babeldir supplied?
 	##If yes, use it
 	
+
 	.checkMbSettings()
 	usebabel=TRUE
 	babeldir <- getOption("RMassBank")$babeldir
@@ -545,17 +665,31 @@ gatherData <- function(id)
 	
 	
 	##Get all useful information from the local "database" (from the CSV sheet)
-	
+	##############################
 	smiles <- findSmiles(id)
-	mass <- findMass(smiles)
-	dbcas <- findCAS(id)
+	##mass <- findMass(smiles)
+	mass <- smiles2mass(smiles)
+	##tfelse(!sjmisc::is_empty(out$output),yes=out$output,no="NA")
+	##dbcas <- findCAS(id)
+	dbcas <- ifelse(!sjmisc::is_empty(findCAS(id)),yes=findCAS(id),no=ifelse(!sjmisc::is_empty(tryCatch({getCactus(smiles, "cas")[1]} ,error = function(x) {return(NA)})),getCactus(smiles, "cas")[1],tryCatch({webchem::cir_query(smiles, "cas")[[2]][1]} ,error = function(x) {return(NA)})))
 	dbname <- findName(id)
 	if(is.na(dbname)) dbname <- ""
 	if(is.na(dbcas)) dbcas <- ""
 	iupacName <- dbname
 	synonym <- dbname
 	formula <- findFormula(id)
-	
+	### adding this new ######## 
+	ChemOnt<-findOnt(id)
+	#############################
+	#############################
+        PRECURSOR_TYPE<-PRECURSORTYPE(id)
+	################################
+	BASEPEAK <- findBpeak(id)
+	PRECURSORMZ <- findBpeak(id)
+        COLLISIONENERGY <- findCenergy(id)
+        IONMODE <- findIM(id)
+	NAME <- findNAME(id)
+	#################################
 	##Convert SMILES to InChI key via Cactvs or babel. CTS doesn't "interpret" the SMILES per se,
 	##it just matches identical known SMILES, so we need to convert to a "searchable" and
 	##standardized format beforehand. Other databases are able to interpret the smiles.
@@ -634,10 +768,12 @@ gatherData <- function(id)
 	# Start to fill the MassBank record.
 	# The top 4 entries will not go into the final record; they are used to identify
 	# the record and also to facilitate manual editing of the exported record table.
+	###########################################################################
 	mbdata <- list()
 	mbdata[['id']] <- id
 	mbdata[['dbcas']] <- dbcas
 	mbdata[['dbname']] <- dbname
+	##mbdata[['dbname']] <- NAME
 	mbdata[['dataused']] <- "smiles"
 	mbdata[['ACCESSION']] <- ""
 	mbdata[['RECORD_TITLE']] <- ""
@@ -645,10 +781,12 @@ gatherData <- function(id)
 	mbdata[['AUTHORS']] <- getOption("RMassBank")$annotations$authors
 	mbdata[['LICENSE']] <- getOption("RMassBank")$annotations$license
 	mbdata[['COPYRIGHT']] <- getOption("RMassBank")$annotations$copyright
+	#########################################################################
 	# Confidence annotation and internal ID annotation.
 	# The ID of the compound will be written like:
 	# COMMENT: EAWAG_UCHEM_ID 1234
 	# if annotations$internal_id_fieldname is set to "EAWAG_UCHEM_ID"
+	###########################################################################
 	mbdata[["COMMENT"]] <- list()
   if(findLevel(id) == "0"){
 	mbdata[["COMMENT"]][["CONFIDENCE"]] <- getOption("RMassBank")$annotations$confidence_comment
@@ -690,7 +828,7 @@ gatherData <- function(id)
 	}
 	
 	mbdata[["COMMENT"]][["ID"]] = id
-  
+  #####################################################################################
   ## add generic COMMENT information
   rowIdx <- which(.listEnvEnv$listEnv$compoundList$ID == id)
   properties      <- colnames(.listEnvEnv$listEnv$compoundList)
@@ -698,25 +836,37 @@ gatherData <- function(id)
   theseProperties <- grepl(x = properties, pattern = "^COMMENT ")
   theseProperties <- theseProperties & (!(unlist(.listEnvEnv$listEnv$compoundList[rowIdx, ]) == "NA" | is.na(unlist(.listEnvEnv$listEnv$compoundList[rowIdx, ]))))
   mbdata[["COMMENT"]][properties2[theseProperties]] <- unlist(.listEnvEnv$listEnv$compoundList[rowIdx, theseProperties])
-  
+  ####################################################################################
 	# here compound info starts
-	mbdata[['CH$NAME']] <- names
+	##mbdata[['CH$NAME']] <- names
 	# Currently we use a fixed value for Compound Class, since there is no useful
 	# convention of what should go there and what shouldn't, and the field is not used
 	# in search queries.
+        #######################################
+        ##mbdata[['CH$NAME']] <- names
+        mbdata[['CH$NAME']] <- NAME
 	mbdata[['CH$COMPOUND_CLASS']] <- getOption("RMassBank")$annotations$compound_class
 	mbdata[['CH$FORMULA']] <- formula
 	mbdata[['CH$EXACT_MASS']] <- mass
 	mbdata[['CH$SMILES']] <- smiles
+	##########################################
+        ##mbdata[['CH$NAME']] <- NAME
+        ##########################################
 	
 	if(usebabel){
+	  print("checking if entering usebabel")
 		cmdinchi <- paste0(babeldir, 'obabel -:"',smiles,'" ', '-oinchi')
 		mbdata[['CH$IUPAC']] <- system(cmdinchi, intern=TRUE, input=smiles, ignore.stderr=TRUE)
+		## added this new
+		##mbdata[['ChemOnt']]<-findOnt(id)
 	} else{
 		mbdata[['CH$IUPAC']] <- getCactus(smiles, "stdinchi")
+		##added this new
+		##mbdata[['ChemOnt']]<-findOnt(id)
 	}
 	
-
+   ##print("if the ChemOnt works")
+   ##print(findOnt(1))
 	
 	# Add all CH$LINK fields present in the compound datasets
 	link <- list()
@@ -791,13 +941,41 @@ gatherData <- function(id)
 			link[["PUBCHEM"]] <- paste0("CID:", link[["PUBCHEM"]])
 		}
 	}
-	
+	############################################
 	link[["INCHIKEY"]] <- inchikey_split
+	link[["ChemOnt"]] <- findOnt(id)
 	link[["COMPTOX"]] <- comptox
+	############################################
+	##link[["ChemOnt"]] <- findOnt(id)
+        ############################################
 	if(length(csid)>0) if(any(!is.na(csid))) link[["CHEMSPIDER"]] <- min(as.numeric(as.character(csid[!is.na(csid)])))
 	mbdata[['CH$LINK']] <- link
-		
+	############################################
+        MASS_SPECTROMETRY = list()
+	MASS_SPECTROMETRY[["COLLISION_ENERGY"]] = COLLISIONENERGY
+	MASS_SPECTROMETRY[["ION_MODE"]] = IONMODE
+	############################################
+	## changing this 
+	###AC$MASS_SPECTROMETRY
+	##mbdata[["AC.MASS_SPECTROMETRY"]] <- MASS_SPECTROMETRY
+	mbdata[["AC$MASS_SPECTROMETRY"]] <- MASS_SPECTROMETRY
+	##mbdata[["AC.MASS_SPECTROMETRY.ION_"]] <- MASS_SPECTROMETRY
+        ##############################################		
+	FOCUSED_ION = list()
+        FOCUSED_ION[["PRECURSOR_TYPE"]] = PRECURSOR_TYPE
+	FOCUSED_ION[["BASE_PEAK"]] = BASEPEAK
+	FOCUSED_ION[["PRECURSOR_MZ"]] = PRECURSORMZ	
+	############################################
+	##mbdata[["MS.FOCUSED_ION"]] <- FOCUSED_ION
+	##MS$FOCUSED_ION
+	mbdata[["MS$FOCUSED_ION"]] <- FOCUSED_ION 
+	##mbdata[["MS.FOCUSED_ION.PRECURSOR_TYPE"]] <- FOCUSED_ION
+	##mbdata[["MS.FOCUSED_ION.BASE_PEAK"]] <- FOCUSED_ION
+	##mbdata[["MS.FOCUSED_ION.PRECURSOR_M/Z"]] <- FOCUSED_ION
+	#############################################
+        
 	return(mbdata)  
+
 }
 
 # Retrieve annotation data for a compound, using only babel
@@ -835,6 +1013,8 @@ gatherData <- function(id)
 #' 
 #' @export
 gatherDataBabel <- function(id){
+
+
 		.checkMbSettings()
 		babeldir <- getOption("RMassBank")$babeldir
 		smiles <- findSmiles(id)
@@ -850,21 +1030,34 @@ gatherDataBabel <- function(id){
 			inchikey <- system(cmdinchikey, intern=TRUE, input=smiles, ignore.stderr=TRUE)
 			cmdinchi <- paste0(babeldir, 'obabel -:"',smiles,'" ', '-oinchi')
 			inchi <- system(cmdinchi, intern=TRUE, input=smiles, ignore.stderr=TRUE)
-			
+			####################################
 			##Read from Compoundlist
 			smiles <- findSmiles(id)
-			mass <- findMass(smiles)
-			dbcas <- findCAS(id)
+			##mass <- findMass(smiles)
+			mass <- smiles2mass(smiles)
+			dbcas <- ifelse(!sjmisc::is_empty(findCAS(id)),yes=findCAS(id),no=ifelse(!sjmisc::is_empty(tryCatch({getCactus(smiles, "cas")[1]} ,error = function(x) {return(NA)})),getCactus(smiles, "cas")[1],tryCatch({webchem::cir_query(smiles, "cas")[[2]][1]} ,error = function(x) {return(NA)})))
+			##dbcas <- findCAS(id)
 			dbname <- findName(id)
 			if(is.na(dbname)) dbname <- ""
 			if(is.na(dbcas)) dbcas <- ""
 			formula <- findFormula(id)
-			
+			### adding this new
+                        ChemOnt<-findOnt(id)
+			###################################
+			PRECURSOR_TYPE <-PRECURSORTYPE(id)
+                        ###################################
+			BASEPEAK <- findBpeak(id)
+			PRECURSORMZ <- findBpeak(id)
+			COLLISIONENERGY <- findCenergy(id)
+			IONMODE <- findIM(id)
+			NAME <- findNAME(id)
+			####################################
 			##Create 
 			mbdata <- list()
 			mbdata[['id']] <- id
 			mbdata[['dbcas']] <- dbcas
 			mbdata[['dbname']] <- dbname
+			##mbdata[['dbname']] <-NAME
 			mbdata[['dataused']] <- "smiles"
 			mbdata[['ACCESSION']] <- ""
 			mbdata[['RECORD_TITLE']] <- ""
@@ -872,10 +1065,12 @@ gatherDataBabel <- function(id){
 			mbdata[['AUTHORS']] <- getOption("RMassBank")$annotations$authors
 			mbdata[['LICENSE']] <- getOption("RMassBank")$annotations$license
 			mbdata[['COPYRIGHT']] <- getOption("RMassBank")$annotations$copyright
+			#################################################################
 			# Confidence annotation and internal ID annotation.
 			# The ID of the compound will be written like:
 			# COMMENT: EAWAG_UCHEM_ID 1234
 			# if annotations$internal_id_fieldname is set to "EAWAG_UCHEM_ID"
+			##################################################################
 			mbdata[["COMMENT"]] <- list()
 			if(findLevel(id) == "0"){
 			mbdata[["COMMENT"]][["CONFIDENCE"]] <- getOption("RMassBank")$annotations$confidence_comment
@@ -918,22 +1113,54 @@ gatherDataBabel <- function(id){
 			mbdata[["COMMENT"]][["ID"]] <- id
 
 			# here compound info starts
-			mbdata[['CH$NAME']] <- as.list(dbname)
-			
+			##mbdata[['CH$NAME']] <- as.list(dbname)
+			###NAME
+			##mbdata[['CH$NAME']] <- NAME
+			##############################
 			# Currently we use a fixed value for Compound Class, since there is no useful
 			# convention of what should go there and what shouldn't, and the field is not used
 			# in search queries.
+			###############################
+			mbdata[['CH$NAME']] <- NAME
 			mbdata[['CH$COMPOUND_CLASS']] <- getOption("RMassBank")$annotations$compound_class
 			mbdata[['CH$FORMULA']] <- formula
 			mbdata[['CH$EXACT_MASS']] <- mass
 			mbdata[['CH$SMILES']] <- smiles
 			mbdata[['CH$IUPAC']] <- inchi
-			
+			##mbdata[['CH$NAME']] <- NAME
+			###############################
 			link <- list()
 			if(dbcas != "")
 			link[["CAS"]] <- dbcas
 			link[["INCHIKEY"]] <- inchikey
+			link[["INCHIKEY"]] <- inchikey
 			mbdata[['CH$LINK']] <- link
+			## adding this new
+			link[["ChemOnt"]] <-ChemOnt
+			####################################
+			MASS_SPECTROMETRY = list()
+			MASS_SPECTROMETRY[["COLLISION_ENERGY"]] = COLLISIONENERGY
+			MASS_SPECTROMETRY[["ION_MODE"]] = IONMODE
+			######################################
+			mbdata[["AC$MASS_SPECTROMETRY"]] <- MASS_SPECTROMETRY
+			##mbdata[["AC$MASS_SPECTROMETRY"]] <- MASS_SPECTROMETRY
+			##mbdata[["AC.MASS_SPECTROMETRY"]] <- MASS_SPECTROMETRY
+			##mbdata[["AC.MASS_SPECTROMETRY.ION_MODE"]] = IONMODE
+			#####################################
+                        FOCUSED_ION = list()
+                        FOCUSED_ION[["PRECURSOR_TYPE"]] = PRECURSOR_TYPE
+			FOCUSED_ION[["BASE_PEAK"]] = BASEPEAK
+			FOCUSED_ION[["PRECURSOR_MZ"]] = PRECURSORMZ
+                        #######################################
+                        ### adding this new
+		        ##mbdata[["MS.FOCUSED_ION.PRECURSOR_TYPE"]] <- FOCUSED_ION
+			##mbdata[["MS.FOCUSED_ION.BASE_PEAK"]] <- BASEPEAK
+			##mbdata[["MS.FOCUSED_ION"]] <- FOCUSED_ION
+			mbdata[["MS$FOCUSED_ION"]] <- FOCUSED_ION
+		        #########################################	
+           
+
+
 		}
 		return(mbdata)
 }
@@ -976,8 +1203,9 @@ gatherDataBabel <- function(id){
 #' 
 #' @export
 gatherDataUnknown <- function(id, mode, retrieval){
-    .checkMbSettings()
     
+
+    .checkMbSettings()
     ##Read from Compoundlist
     smiles <- ""
     if(retrieval == "unknown"){
@@ -988,18 +1216,31 @@ gatherDataUnknown <- function(id, mode, retrieval){
         mass <- findMass(id, "tentative", mode)
         formula <- findFormula(id, "tentative")
     }
+
     dbcas <- NA
     dbname <- findName(id)
     if(is.na(dbname)) dbname <- paste("Unknown ID:",id)
     if(is.na(dbcas)) dbcas <- ""
-    
-
-    
+    #####################################################################
+    smiles <- findSmiles(id)
+    mass <- smiles2mass(smiles)
+    dbcas <- findCAS(id)
+    dbname <- findName(id)
+    formula <- findFormula(id)
+    ChemOnt<-findOnt(id)
+    PRECURSOR_TYPE <-PRECURSORTYPE(id)
+    BASEPEAK <- findBpeak(id)
+    PRECURSORMZ <- findBpeak(id)
+    COLLISIONENERGY <- findCenergy(id)
+    IONMODE <- findIM(id)
+    NAME <- findNAME(id)
+    ##################################################################
     ##Create 
     mbdata <- list()
     mbdata[['id']] <- id
     mbdata[['dbcas']] <- dbcas
     mbdata[['dbname']] <- dbname
+    ##mbdata[['dbname']] <- NAME
     mbdata[['dataused']] <- "none"
     mbdata[['ACCESSION']] <- ""
     mbdata[['RECORD_TITLE']] <- ""
@@ -1007,10 +1248,12 @@ gatherDataUnknown <- function(id, mode, retrieval){
     mbdata[['AUTHORS']] <- getOption("RMassBank")$annotations$authors
     mbdata[['LICENSE']] <- getOption("RMassBank")$annotations$license
     mbdata[['COPYRIGHT']] <- getOption("RMassBank")$annotations$copyright
+    ###################################################################
     # Confidence annotation and internal ID annotation.
     # The ID of the compound will be written like:
     # COMMENT: EAWAG_UCHEM_ID 1234
     # if annotations$internal_id_fieldname is set to "EAWAG_UCHEM_ID"
+    ##################################################################
     mbdata[["COMMENT"]] <- list()
     if(findLevel(id) == "0"){
     mbdata[["COMMENT"]][["CONFIDENCE"]] <- getOption("RMassBank")$annotations$confidence_comment
@@ -1053,21 +1296,47 @@ gatherDataUnknown <- function(id, mode, retrieval){
     mbdata[["COMMENT"]][["ID"]] <- id
 
     # here compound info starts
-    mbdata[['CH$NAME']] <- as.list(dbname)
-    
+    ##mbdata[['CH$NAME']] <- as.list(dbname)
+    ##mbdata[['CH$NAME']] <- NAME
+    ######################################
     # Currently we use a fixed value for Compound Class, since there is no useful
     # convention of what should go there and what shouldn't, and the field is not used
     # in search queries.
+    ####################################
+    mbdata[['CH$NAME']] <- NAME
     mbdata[['CH$COMPOUND_CLASS']] <- getOption("RMassBank")$annotations$compound_class
     mbdata[['CH$FORMULA']] <- formula
     mbdata[['CH$EXACT_MASS']] <- mass
     mbdata[['CH$SMILES']] <- ""
     mbdata[['CH$IUPAC']] <- ""
-    
+    ####################################################
     link <- list()
     mbdata[['CH$LINK']] <- link
-
+    ###################################################
+    PRECURSOR_TYPE<-PRECURSORTYPE(id)
+    ###################################################
+    MASS_SPECTROMETRY = list()
+    MASS_SPECTROMETRY[["COLLISION_ENERGY"]] = COLLISIONENERGY
+    MASS_SPECTROMETRY[["ION_MODE"]] = IONMODE
+    ###################################################
+    mbdata[["AC$MASS_SPECTROMETRY"]] <- MASS_SPECTROMETRY
+    ##mbdata[["AC.MASS_SPECTROMETRY"]] <- MASS_SPECTROMETRY
+    ##mbdata[["AC.MASS_SPECTROMETRY.ION_MODE"]] = MASS_SPECTROMETRY
+    ###################################################
+    FOCUSED_ION = list()
+    FOCUSED_ION[["PRECURSOR_TYPE"]] = PRECURSOR_TYPE
+    FOCUSED_ION[["BASE_PEAK"]] = BASEPEAK
+    FOCUSED_ION[["PRECURSOR_MZ"]] = PRECURSORMZ
+    ####################################################
+    ### I am a new list hre 
+    ###MS$FOCUSED_ION: PRECURSOR_TYPE
+    mbdata[["MS$FOCUSED_ION"]] <- FOCUSED_ION
+    ##mbdata["MS.FOCUSED_ION"] <- FOCUSED_ION
+    ##mbdata[["MS.FOCUSED_ION.BASE_PEAK"]] <- FOCUSED_ION 
+    ##mbdata[["MS.FOCUSED_ION.PRECURSOR_M/Z"]] <- FOCUSED_ION
+    ###################################################
     return(mbdata)
+
 }
 
 # Flatten the internal tree-like representation of MassBank data to a flat table.
@@ -1122,6 +1391,7 @@ flatten <- function(mbdata)
 {
   .checkMbSettings()
   
+
   colNames     <- names(unlist(mbdata[[1]]))
   commentNames <- colNames[grepl(x = colNames, pattern = "^COMMENT\\.")]
   
@@ -1130,12 +1400,14 @@ flatten <- function(mbdata)
               "dbcas",
               "dbname",
               "dataused",
-              commentNames,
+              ##commentNames,
               #"COMMENT.CONFIDENCE",
               # Note: The field name of the internal id field is replaced with the real name
               # at "compilation" time. Therefore, functions DOWNSTREAM from compileRecord() 
               # must use the full name including the info from options("RMassBank").
-              #"COMMENT.ID",
+	      ####################
+	      "COMMENT.CONFIDENCE",
+              "COMMENT.ID",
               "CH$NAME1",
               "CH$NAME2",
               "CH$NAME3",
@@ -1153,8 +1425,15 @@ flatten <- function(mbdata)
               "CH$LINK.LIPIDMAPS",
               "CH$LINK.PUBCHEM",
               "CH$LINK.INCHIKEY",
+	      "CH$LINK.ChemOnt",
               "CH$LINK.CHEMSPIDER",
-	          "CH$LINK.COMPTOX"
+	      "CH$LINK.COMPTOX",
+	      "MS.FOCUSED_ION.PRECURSOR_TYPE",
+	      "MS.FOCUSED_ION.BASE_PEAK",
+	      "MS.FOCUSED_ION.PRECURSOR_MZ",
+              "AC.MASS_SPECTROMETRY.COLLISION_ENERGY",
+	      "AC.MASS_SPECTROMETRY.ION_MODE"
+
 	          )
   # make an empty data frame with the right length
   rows <- length(mbdata)
@@ -1186,6 +1465,7 @@ readMbdata <- function(row)
 {
   .checkMbSettings()
   
+
   # Listify the table row. Lists are just cooler to work with :)
   row <- as.list(row)
   
@@ -1207,9 +1487,18 @@ readMbdata <- function(row)
   # Read all determined fields from the file
   # This is not very flexible, as you can see...
     colList <- c(
-              commentNames,
+	       "id",
+              "dbcas",
+              "dbname",
+              "dataused",
+              ##commentNames,
               #"COMMENT.CONFIDENCE",
-              #"COMMENT.ID",
+              # Note: The field name of the internal id field is replaced with the real name
+              # at "compilation" time. Therefore, functions DOWNSTREAM from compileRecord()
+              # must use the full name including the info from options("RMassBank").
+              ####################
+              "COMMENT.CONFIDENCE",
+              "COMMENT.ID",
               "CH$NAME1",
               "CH$NAME2",
               "CH$NAME3",
@@ -1227,19 +1516,28 @@ readMbdata <- function(row)
               "CH$LINK.LIPIDMAPS",
               "CH$LINK.PUBCHEM",
               "CH$LINK.INCHIKEY",
+	      "CH$LINK.ChemOnt",
               "CH$LINK.CHEMSPIDER",
-              "CH$LINK.COMPTOX")
+              "CH$LINK.COMPTOX",
+	      "MS.FOCUSED_ION.PRECURSOR_TYPE",
+	      "MS.FOCUSED_ION.BASE_PEAK",
+	      "MS.FOCUSED_ION.PRECURSOR_MZ",
+	      "AC.MASS_SPECTROMETRY.COLLISION_ENERGY",
+	      "AC.MASS_SPECTROMETRY.ION_MODE"
+
+    )
   mbdata[["COMMENT"]] = list()
   #mbdata[["COMMENT"]][["CONFIDENCE"]] <- row[["COMMENT.CONFIDENCE"]]
   # Again, our ID field. 
   #mbdata[["COMMENT"]][["ID"]] <- row[["COMMENT.ID"]]
   mbdata[["COMMENT"]][gsub(x = commentNames, pattern = "^COMMENT\\.", replacement = "")] <- row[commentNames]
-  
+  #####################################
   names = c(row[["CH.NAME1"]], row[["CH.NAME2"]], row[["CH.NAME3"]], row[["CH.NAME4"]], row[["CH.NAME5"]])
   names = names[which(!is.na(names))]
-  
   names <- gsub("'", "`", names) 
-  mbdata[["CH$NAME"]] = names
+  ########################################
+  mbdata[["CH$NAME"]] = ifelse(!sjmisc::is_empty(row[["dbname"]]),row[["dbname"]],names)
+  ##mbdata[["CH$NAME"]] = names
   mbdata[["CH$COMPOUND_CLASS"]] = row[["CH.COMPOUND_CLASS"]]
   mbdata[["CH$FORMULA"]] = row[["CH.FORMULA"]]
   mbdata[["CH$EXACT_MASS"]] = row[["CH.EXACT_MASS"]]
@@ -1254,11 +1552,33 @@ readMbdata <- function(row)
   link[["LIPIDMAPS"]] = row[["CH.LINK.LIPIDMAPS"]]
   link[["PUBCHEM"]] = row[["CH.LINK.PUBCHEM"]]
   link[["INCHIKEY"]] = row[["CH.LINK.INCHIKEY"]]
+  ### add this new
+  ### Commenting this line and adding the new line
+  ##link[["ChemOnt"]] = row[["CH$LINK.ChemOnt"]]
+  link[["ChemOnt"]] = row[["CH.LINK.ChemOnt"]]
+  ################################
   link[["CHEMSPIDER"]] = row[["CH.LINK.CHEMSPIDER"]]
   link[["COMPTOX"]] = row[["CH.LINK.COMPTOX"]]
   link[which(is.na(link))] <- NULL
+  #################################
+  #################################
+  FOCUSED_ION = list()
+  FOCUSED_ION[["PRECURSOR_TYPE"]]=row[["MS.FOCUSED_ION.PRECURSOR_TYPE"]]
+  FOCUSED_ION[["BASE_PEAK"]]=row[["MS.FOCUSED_ION.BASE_PEAK"]]
+  FOCUSED_ION[["PRECURSOR_MZ"]]=row[["MS.FOCUSED_ION.PRECURSOR_MZ"]]
+  ####################################
+  MASS_SPECTROMETRY = list()
+  MASS_SPECTROMETRY[["COLLISION_ENERGY"]] = row[["AC.MASS_SPECTROMETRY.COLLISION_ENERGY"]]
+  MASS_SPECTROMETRY[["ION_MODE"]] = row[["AC.MASS_SPECTROMETRY.ION_MODE"]]
+  #############################################
   mbdata[["CH$LINK"]] <- link
-
+  ###############################################
+  ##mbdata[["MS.FOCUSED_ION"]] <- FOCUSED_ION
+  ##mbdata[["AC.MASS_SPECTROMETRY"]] <- MASS_SPECTROMETRY
+  ###############################################
+  mbdata[["AC$MASS_SPECTROMETRY"]] <- MASS_SPECTROMETRY
+  mbdata[["MS$FOCUSED_ION"]] <- FOCUSED_ION
+  ###############################################
     ## SP$SAMPLE
   if(all(nchar(row[["SP.SAMPLE"]]) > 0, row[["SP.SAMPLE"]] != "NA", !is.na(row[["SP.SAMPLE"]]), na.rm = TRUE))
     mbdata[['SP$SAMPLE']] <- row[["SP.SAMPLE"]]
@@ -1267,6 +1587,7 @@ readMbdata <- function(row)
   
   return(mbdata)
   
+
 }
 
 #' Generate peak annotation from peaklist
@@ -1497,6 +1818,7 @@ setMethod("toMassbank", "RmbSpectrum2", function(o, addAnnotation = getOption("R
 .toMassbank <- function (s, addAnnotation = getOption("RMassBank")$add_annotation)
 {
   
+
   peaks <- getData(s)
   # check that peaks were normalized
   if(!("intrel" %in% colnames(peaks)))
@@ -1575,7 +1897,6 @@ setMethod("toMassbank", "RmbSpectrum2", function(o, addAnnotation = getOption("R
                                  sep="")
           count <<- count+1
         }
-        #browser()
       }
       # List with named items: Write every entry like CH$LINK: CAS 12-345-678
       else if(is.list(mbdata[[entry]]) & !is.null(names(mbdata[[entry]])))
@@ -1718,12 +2039,17 @@ makeMollist <- function(compiled)
   # list of all compiled spectra), extract the uppermost CH$NAME and the ID (from the
   # first spectrum.) Make the ID into 0000 format.
   
+
   emptySpectra <- unlist(lapply(compiled, function(cpd) length(cpd@children) == 0))
   compiled <- compiled[!emptySpectra]
   
   tsvlist <- t(sapply(compiled, function(entry)
     {
+	    
+
     name <- entry@children[[1]]@info[["CH$NAME"]][[1]]
+    ##name <- entry@name	    
+
     id <- sprintf("%04d", as.numeric(entry@id))
     molfilename <- paste(id,".mol",sep='')
     return(c(name,molfilename))
@@ -1817,7 +2143,9 @@ addPeaks <- function(mb, filename_or_dataframe)
 
 gatherDataMinimal.cpd <- function(cpd){
   
+  
   ##Read from Compoundlist
+
   if(length(cpd@smiles) == 1) smiles <- cpd@smiles
   else
     smiles <- ""
@@ -1849,13 +2177,30 @@ gatherDataMinimal.cpd <- function(cpd){
   link <- list()
   mbdata[['CH$LINK']] <- link
 
+  MASS_SPECTROMETRY = list()
+  mbdata[["AC$MASS_SPECTROMETRY"]] <- MASS_SPECTROMETRY
+  ##mbdata[["AC.MASS_SPECTROMETRY.ION_MODE"]] = MASS_SPECTROMETRY
+
+  FOCUSED_ION = list()
+  ##mbdata[["MS.FOCUSED_ION"]] <- FOCUSED_ION
+  ##MS.FOCUSED_ION.PRECURSOR_TYPE
+  mbdata[["MS$FOCUSED_ION"]] <- FOCUSED_ION
+  ##mbdata[["MS.FOCUSED_ION.BASE_PEAK"]]  <- FOCUSED_ION
+  ##mbdata[["MS.FOCUSED_ION.PRECURSOR_M/Z"]]   <- FOCUSED_ION
+  ########################################
+  print("entering the cpd value ...")
+  print(cpd)
+  ########################################
   return(mbdata)
+  #########################################
 }
 
 
 
 gatherDataMinimal.spectrum <- function(spectrum){
   
+  
+
   ##Read from Compoundlist
   if(length(cpd@smiles) == 1) smiles <- cpd@smiles
   else
@@ -1878,7 +2223,12 @@ gatherDataMinimal.spectrum <- function(spectrum){
   # convention of what should go there and what shouldn't, and the field is not used
   # in search queries.
   
+  ###########################
+  print("enter the spectrum value")
+  print(spectrum)
+  ###########################
   return(mbdata)
+
 }
 
 

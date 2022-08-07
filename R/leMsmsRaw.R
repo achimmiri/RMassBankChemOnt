@@ -216,7 +216,7 @@ findMsMsHR.mass <- function(msRaw, mz, limit.coarse, limit.fine, rtLimits = NA, 
 		# carry forward the precursor scan number from the last parent scan
 		headerData$precursorScanNum <- NA
 		headerData[which(headerData$msLevel == 1),"precursorScanNum"] <-
-				headerData[which(headerData$msLevel == 1),"acquisitionNum"]
+		headerData[which(headerData$msLevel == 1),"acquisitionNum"]
 		headerData[,"precursorScanNum"] <- .locf(headerData[,"precursorScanNum"])
 		# Clear the actual MS1 precursor scan number again
 		headerData[which(headerData$msLevel == 1),"precursorScanNum"] <- 0
@@ -565,7 +565,7 @@ findMsMsHRperxcms.direct <- function(fileName, cpdID, mode="pH", findPeaksArgs =
 	
 		# Find all relevant information for the current cpdID
 		XCMSspectra <- list()
-		RT <- findRt(cpdID[ID])$RT * 60
+		RT <- findRt(cpdID[ID])$RT
 		parentMass <- findMz(cpdID[ID], mode=mode)$mzCenter
 		
 		# Is the information in the compound list?
@@ -756,7 +756,7 @@ findMsMsHRperMsp.direct <- function(fileName, cpdIDs, mode="pH") {
     mz = as.numeric(mzs),
     rt = as.numeric(rts)
   )
-  precursorTable[, "rt"] <- precursorTable[, "rt"] * 60
+  precursorTable[, "rt"] <- precursorTable[, "rt"]
   
   ##
   ## Retrieval over all supplied cpdIDs
@@ -766,12 +766,13 @@ findMsMsHRperMsp.direct <- function(fileName, cpdIDs, mode="pH") {
     
     # Find all relevant information for the current cpdID
     spectrum <- NULL
-    RT <- findRt(cpdIDs[[idIdx]])$RT * 60
+    RT <- findRt(cpdIDs[[idIdx]])$RT 
+
     parentMass <- findMz(cpdIDs[[idIdx]], mode=mode)$mzCenter
     
     # Is the information in the compound list?
     if(is.na(parentMass)){
-      stop(paste("There was no matching entry to the supplied cpdID", cpdIDs[[idIdx]] ,"\n Please check the cpdIDs and the compoundlist."))
+      stop(paste("There was no matching entry to the supplied cpdID"," Please check the cpdIDs and the compoundlist."))
     }
     
     # Go over every collision energy of the MS2
@@ -947,7 +948,7 @@ read.msp <- function(file){
   })
 }
 ## new
-################################################################################
+#####################################################################################################
 
 # Finds the EIC for a mass trace with a window of x ppm.
 # (For ppm = 10, this is +5 / -5 ppm from the non-recalibrated mz.)

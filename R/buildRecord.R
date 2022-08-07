@@ -39,11 +39,13 @@
 #' \url{http://www.massbank.jp/manuals/MassBankRecord_en.pdf}
 #' @rdname buildRecord
 #' @export
-setGeneric("buildRecord", function(o, ..., cpd, mbdata, analyticalInfo, additionalPeaks) standardGeneric("buildRecord"))
+setGeneric("buildRecord", function(o, ..., cpd, mbdata, analyticalInfo, additionalPeaks, adductInformation) standardGeneric("buildRecord"))
 
 .buildRecord.RmbSpectraSet <- function(cpd, ..., mbdata = list(), additionalPeaks = NULL)
 {
 	# gather the individual spectra data
+	
+
 	analyticalInfo <- getAnalyticalInfo(cpd)
 
 	# Go through all child spectra, and add metadata to all the info slots
@@ -61,7 +63,7 @@ setGeneric("buildRecord", function(o, ..., cpd, mbdata, analyticalInfo, addition
 }
 
 #' @rdname buildRecord
-setMethod("buildRecord", "RmbSpectraSet", function(o, ..., mbdata = list(), additionalPeaks = NULL)
+setMethod("buildRecord", "RmbSpectraSet", function(o, ..., mbdata = list(), additionalPeaks = NULL, adductInformation = NULL)
       .buildRecord.RmbSpectraSet(cpd=o, ..., mbdata = mbdata, additionalPeaks = additionalPeaks)
     )
 
@@ -159,7 +161,8 @@ getAnalyticalInfo <- function(cpd = NULL)
 	# This list could be made customizable.
 	ac_lc <- list();
   if(!is.null(cpd))
-	  rt  <- cpd@parent@rt / 60
+	  rt  <- cpd@parent@rt
+
 	ac_lc[['COLUMN_NAME']] <- getOption("RMassBank")$annotations$lc_column
 	ac_lc[['FLOW_GRADIENT']] <- getOption("RMassBank")$annotations$lc_gradient
 	ac_lc[['FLOW_RATE']] <- getOption("RMassBank")$annotations$lc_flow
@@ -223,10 +226,11 @@ setMethod("buildRecord", "RmbSpectrum2", function(o, ..., cpd = NULL, mbdata = l
 	ac_ms[['FRAGMENTATION_MODE']] <- spectrum@info$mode
 	#ac_ms['PRECURSOR_TYPE'] <- precursor_types[spec$mode]
 	if(length(spectrum@info$ce) > 0)
-		ac_ms[['COLLISION_ENERGY']] <- spectrum@info$ce
+             
+                ac_ms[['COLLISION_ENERGY']] <- mbdata$`AC$MASS_SPECTROMETRY`$COLLISION_ENERGY
 	else
-		ac_ms[['COLLISION_ENERGY']] <- spectrum@collisionEnergy
-	ac_ms[['RESOLUTION']] <- spectrum@info$res
+		ac_ms[['COLLISION_ENERGY']] <- mbdata$`AC$MASS_SPECTROMETRY`$COLLISION_ENERGY
+	        ac_ms[['RESOLUTION']] <- spectrum@info$res
 
 	# Calculate exact precursor mass with Rcdk, and find the base peak from the parent
 	# spectrum. (Yes, that's what belongs here, I think.)
@@ -235,9 +239,9 @@ setMethod("buildRecord", "RmbSpectrum2", function(o, ..., cpd = NULL, mbdata = l
 	if(!is.null(cpd))
 	{
 	  adductInfo <- getAdductInformation("")
-		ms_fi[['BASE_PEAK']] <- round(mz(cpd@parent)[which.max(intensity(cpd@parent))],4)
-		ms_fi[['PRECURSOR_M/Z']] <- round(cpd@mz,4)
-		ms_fi[['PRECURSOR_TYPE']] <- adductInfo[adductInfo$mode == cpd@mode, "adductString"]
+                ms_fi[['BASE_PEAK']] <- mbdata$`MS$FOCUSED_ION`$BASE_PEAK
+	        ms_fi[['PRECURSOR_M/Z']] <- mbdata$`MS$FOCUSED_ION`$PRECURSOR_MZ
+		ms_fi[['PRECURSOR_TYPE']] <- mbdata$`MS$FOCUSED_ION`$PRECURSOR_TYPE
 
 		if(all(!is.na(spectrum@precursorIntensity), 
 		   spectrum@precursorIntensity != 0, 
@@ -260,6 +264,8 @@ setMethod("buildRecord", "RmbSpectrum2", function(o, ..., cpd = NULL, mbdata = l
 	if(getOption("RMassBank")$use_version == 2)
 	{
 		if(length(ac_ms) >0)
+			################################################
+                        ac_ms$ION_MODE= mbdata$`AC$MASS_SPECTROMETRY`$ION_MODE
 			mbdata[["AC$MASS_SPECTROMETRY"]] <- ac_ms
 		if(length(ac_lc) >0)
 			mbdata[["AC$CHROMATOGRAPHY"]] <- ac_lc
@@ -300,9 +306,10 @@ setMethod("buildRecord", "RmbSpectrum2", function(o, ..., cpd = NULL, mbdata = l
 	)
 
 	if(length(spectrum@info$ces) > 0)
-		mbdata[['RECORD_TITLE_CE']] <- spectrum@info$ces
+
+		mbdata[['RECORD_TITLE_CE']] <- mbdata$`AC$MASS_SPECTROMETRY`$COLLISION_ENERGY
 	else
-		mbdata[['RECORD_TITLE_CE']] <- spectrum@collisionEnergy
+		mbdata[['RECORD_TITLE_CE']] <- mbdata$`AC$MASS_SPECTROMETRY`$COLLISION_ENERGY
 
 	# Mode of relative scan calculation: by default it is calculated relative to the
 	# parent scan. If a corresponding option is set, it will be calculated from the first
