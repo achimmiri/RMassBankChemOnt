@@ -967,11 +967,11 @@ gatherData <- function(id)
 				link[["PUBCHEM"]] <- paste0(min(pc))
 			}else{
 				link[["PUBCHEM"]] <- NA
-			}else{
-				link[["PUBCHEM"]] <- NA
 			}
+		}else{
+			link[["PUBCHEM"]] <- NA
 		}
-	} else{
+	}else{
 		link[["PUBCHEM"]] <- PcInfo$PcID[1]
 	}
 	
@@ -979,7 +979,11 @@ gatherData <- function(id)
 	if(!is.null(link[["PUBCHEM"]])){
 		if(substr(link[["PUBCHEM"]],1,4) != "CID:"){
 			link[["PUBCHEM"]] <- paste0("CID:", link[["PUBCHEM"]])
+		}else{
+			link[["PUBCHEM"]] <- NA
 		}
+	}else{
+		link[["PUBCHEM"]] <- NA
 	}
 	############################################
 	link[["INCHIKEY"]] <- inchikey_split
