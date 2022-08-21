@@ -883,27 +883,28 @@ gatherData <- function(id)
 	# Add all CH$LINK fields present in the compound datasets
 	link <- list()
 	# CAS
-	if(!is.na(CTSinfo[1])){
+	if(!sjmisc::is_empty(CTSinfo[1])){
+	##if(!is.na(CTSinfo[1])){
 		if("CAS" %in% CTS.externalIdTypes(CTSinfo))
 		{
 			# Prefer database CAS if it is also listed in the CTS results.
 			# otherwise take the shortest one.
 			cas <- CTS.externalIdSubset(CTSinfo,"CAS")
 			if(dbcas %in% cas)
-				link[["CAS"]] <- dbcas
+				link[["CAS"]] <- tryCatch({dbcas},error = function(x) {return(NA)})
 			else
-				link[["CAS"]] <- cas[[which.min(nchar(cas))]]
+				link[["CAS"]] <- tryCatch({cas[[which.min(nchar(cas))]]},error = function(x) {return(NA)})
 
 		}else{
 			if(dbcas != ""){
-				link[["CAS"]] <- dbcas
+				link[["CAS"]] <- tryCatch({dbcas},error = function(x) {return(NA)})
 			}else{
 				link[["CAS"]] <- NA
 			}
 		}
 	}else{
 		if(dbcas != ""){
-			link[["CAS"]] <- dbcas
+			link[["CAS"]] <- tryCatch({dbcas},error = function(x) {return(NA)})
 		}else{
 			link[["CAS"]] <- NA
 		}
@@ -911,7 +912,8 @@ gatherData <- function(id)
 	
 	
 	# CHEBI
-	if(is.na(PcInfo$Chebi[1])){
+	if(!sjmisc::is_empty(PcInfo$Chebi[1])){
+	##if(is.na(PcInfo$Chebi[1])){
 		if(!is.na(CTSinfo[1])){
 			if("ChEBI" %in% CTS.externalIdTypes(CTSinfo))
 			{
@@ -929,7 +931,7 @@ gatherData <- function(id)
 		}else{
 			link[["CHEBI"]] <- NA
 		}
-	} else{
+	}else{
 		chebi <- PcInfo$Chebi
 		##chebi <- chebi[[which.min(nchar(chebi))]]
 		##chebi <- strsplit(chebi,":")[[1]]
@@ -939,32 +941,42 @@ gatherData <- function(id)
                 link[["CHEBI"]] <- tryCatch({chebi[[length(chebi)]]},error = function(x) {return(NA)})
 	}
 	# HMDB
-	if(!is.na(CTSinfo[1])){
+	browser()
+	if(!sjmisc::is_empty(CTSinfo[1])){
+	##if(!is.na(CTSinfo[1])){
 		if("Human Metabolome Database" %in% CTS.externalIdTypes(CTSinfo)){
-			link[["HMDB"]] <- CTS.externalIdSubset(CTSinfo,"HMDB")[[1]]
+			link[["HMDB"]] <- NA
+			##link[["HMDB"]] <- tryCatch({CTS.externalIdSubset(CTSinfo,"HMDB")[[1]]},error = function(x) {return(NA)})
 		}else{
 			link[["HMDB"]] <- NA
 		}
 		# KEGG
 		if("KEGG" %in% CTS.externalIdTypes(CTSinfo)){
-			link[["KEGG"]] <- CTS.externalIdSubset(CTSinfo,"KEGG")[[1]]
+			link[["KEGG"]] <- NA
+			##link[["KEGG"]] <- tryCatch({CTS.externalIdSubset(CTSinfo,"KEGG")[[1]]},error = function(x) {return(NA)})
 		}else{
 			link[["KEGG"]] <- NA
 		}
 		# LipidMAPS
 		if("LipidMAPS" %in% CTS.externalIdTypes(CTSinfo)){
-			link[["LIPIDMAPS"]] <- CTS.externalIdSubset(CTSinfo,"LipidMAPS")[[1]]
+			link[["LIPIDMAPS"]] <- NA
+			##link[["LIPIDMAPS"]] <- tryCatch({CTS.externalIdSubset(CTSinfo,"LipidMAPS")[[1]]},error = function(x) {return(NA)})
 		}else{
 			link[["LIPIDMAPS"]] <- NA
 		}
+	}else{
+		link[["HMDB"]] <- NA
+		link[["KEGG"]] <- NA
+		link[["LIPIDMAPS"]] <- NA
 	}
 	# PubChem CID
-	if(is.na(PcInfo$PcID[1])){
+	if(!sjmisc::is_empty(PcInfo$PcID[1])){
+	##if(is.na(PcInfo$PcID[1])){
 		if(!is.na(CTSinfo[1])){
 			if("PubChem CID" %in% CTS.externalIdTypes(CTSinfo))
 			{
-				pc <- CTS.externalIdSubset(CTSinfo,"PubChem CID")
-				link[["PUBCHEM"]] <- paste0(min(pc))
+				pc <- tryCatch({CTS.externalIdSubset(CTSinfo,"PubChem CID")},error = function(x) {return(NA)})
+				link[["PUBCHEM"]] <-tryCatch({paste0(min(pc))},error = function(x) {return(NA)})
 			}else{
 				link[["PUBCHEM"]] <- NA
 			}
@@ -972,11 +984,13 @@ gatherData <- function(id)
 			link[["PUBCHEM"]] <- NA
 		}
 	}else{
-		link[["PUBCHEM"]] <- PcInfo$PcID[1]
+		link[["PUBCHEM"]] <- tryCatch({PcInfo$PcID[1]},error = function(x) {return(NA)})
 	}
 	
-	
-	if(!is.null(link[["PUBCHEM"]])){
+	##browser()
+	if(!sjmisc::is_empty(link[["PUBCHEM"]])){
+	##if(!is.null(link[["PUBCHEM"]])){
+		##print(link[["PUBCHEM"]],1,4)
 		if(substr(link[["PUBCHEM"]],1,4) != "CID:"){
 			link[["PUBCHEM"]] <- paste0("CID:", link[["PUBCHEM"]])
 		}else{
