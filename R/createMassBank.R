@@ -53,12 +53,15 @@
 
 callFC<-function(NL)
 {
+	browser()
   dat <- data.frame()
 
   for(i in 1:length(NL))
   {
-    ##print(i)
+    print(i)
     LV<-NL[[i]]
+    ##print("the value of LV")
+    ##print(LV)
     LV1<-data.frame(t(rapply(LV, function(x) x[1])))
     dat <- rbind(dat,LV1)
 
@@ -255,11 +258,12 @@ resetInfolists <- function(mb)
 #' @export
 mbWorkflow <- function(mb, steps=c(1,2,3,4,5,6,7,8), infolist_path="./infolist.csv", gatherData = "online", filter = TRUE)
 {
+	
     # Step 1: Find which compounds don't have annotation information yet. For these
     # compounds, pull information from CTS (using gatherData).
     if(1 %in% steps)
     {
-
+      ##browser()
         mbdata_ids <- lapply(selectSpectra(mb@spectra, "found", "object"), function(spec) spec@id)
                 rmb_log_info("mbWorkflow: Step 1. Gather info from several databases")
       # Which IDs are not in mbdata_archive yet?
@@ -288,6 +292,7 @@ mbWorkflow <- function(mb, steps=c(1,2,3,4,5,6,7,8), infolist_path="./infolist.c
   if(2 %in% steps)
   {
 	rmb_log_info("mbWorkflow: Step 2. Export infolist (if required)")
+     browser()
 
     if(length(mb@mbdata)>0)
     {
@@ -305,6 +310,8 @@ mbWorkflow <- function(mb, steps=c(1,2,3,4,5,6,7,8), infolist_path="./infolist.c
   # Step 3: Take the archive data (in table format) and reformat it to MassBank tree format.
   if(3 %in% steps)
   {
+	  ##browser()
+
 	rmb_log_info("mbWorkflow: Step 3. Data reformatting")
     mb@mbdata_relisted <- apply(mb@mbdata_archive, 1, readMbdata)
   }
@@ -653,7 +660,8 @@ gatherData <- function(id)
 { 
 	##Preamble: Is a babeldir supplied?
 	##If yes, use it
-	
+
+	##browser()
 
 	.checkMbSettings()
 	usebabel=TRUE
@@ -694,6 +702,8 @@ gatherData <- function(id)
 	##it just matches identical known SMILES, so we need to convert to a "searchable" and
 	##standardized format beforehand. Other databases are able to interpret the smiles.
 	
+        ##browser()
+
 	if(usebabel){
 		cmdinchikey <- paste0(babeldir, 'obabel -:"',smiles,'" ', '-oinchikey')
 		inchikey_split <- system(cmdinchikey, intern=TRUE, input=smiles, ignore.stderr=TRUE)
@@ -867,6 +877,8 @@ gatherData <- function(id)
 	
    ##print("if the ChemOnt works")
    ##print(findOnt(1))
+
+	##browse()
 	
 	# Add all CH$LINK fields present in the compound datasets
 	link <- list()
@@ -877,18 +889,23 @@ gatherData <- function(id)
 			# Prefer database CAS if it is also listed in the CTS results.
 			# otherwise take the shortest one.
 			cas <- CTS.externalIdSubset(CTSinfo,"CAS")
-			if(dbcas %in% cas)
+			if(getCtsRecord(inchikey_split))
 				link[["CAS"]] <- dbcas
 			else
 				link[["CAS"]] <- cas[[which.min(nchar(cas))]]
-		} else{
+
+		}else{
 			if(dbcas != ""){
 				link[["CAS"]] <- dbcas
+			}else{
+				link[["CAS"]] <- NA
 			}
 		}
-	} else{
+	}else{
 		if(dbcas != ""){
 			link[["CAS"]] <- dbcas
+		}else{
+			link[["CAS"]] <- NA
 		}
 	}
 	
@@ -899,28 +916,47 @@ gatherData <- function(id)
 			if("ChEBI" %in% CTS.externalIdTypes(CTSinfo))
 			{
 				# Cut off front "CHEBI:" if present
-				chebi <- CTS.externalIdSubset(CTSinfo,"ChEBI")
-				chebi <- chebi[[which.min(nchar(chebi))]]
-				chebi <- strsplit(chebi,":")[[1]]
-				link[["CHEBI"]] <- chebi[[length(chebi)]]
+				##chebi <- CTS.externalIdSubset(CTSinfo,"ChEBI")
+				##chebi <- chebi[[which.min(nchar(chebi))]]
+				##chebi <- strsplit(chebi,":")[[1]]
+				chebi <- tryCatch({CTS.externalIdSubset(CTSinfo,"ChEBI")},error = function(x) {return(NA)})
+                                chebi <- tryCatch({chebi[[which.min(nchar(chebi))]]},error = function(x) {return(NA)})
+                                chebi <- tryCatch({strsplit(chebi,":")[[1]]},error = function(x) {return(NA)})
+				link[["CHEBI"]] <- tryCatch({chebi[[length(chebi)]]},error = function(x) {return(NA)})
+			}else{
+				link[["CHEBI"]] <- NA
 			}
+		}else{
+			link[["CHEBI"]] <- NA
 		}
 	} else{
 		chebi <- PcInfo$Chebi
-		chebi <- chebi[[which.min(nchar(chebi))]]
-		chebi <- strsplit(chebi,":")[[1]]
-		link[["CHEBI"]] <- chebi[[length(chebi)]]
+		##chebi <- chebi[[which.min(nchar(chebi))]]
+		##chebi <- strsplit(chebi,":")[[1]]
+		##link[["CHEBI"]] <- chebi[[length(chebi)]]
+		chebi <- tryCatch({chebi[[which.min(nchar(chebi))]]},error = function(x) {return(NA)})
+                chebi <- tryCatch({strsplit(chebi,":")[[1]]},error = function(x) {return(NA)})
+                link[["CHEBI"]] <- tryCatch({chebi[[length(chebi)]]},error = function(x) {return(NA)})
 	}
 	# HMDB
 	if(!is.na(CTSinfo[1])){
-		if("Human Metabolome Database" %in% CTS.externalIdTypes(CTSinfo))
+		if("Human Metabolome Database" %in% CTS.externalIdTypes(CTSinfo)){
 			link[["HMDB"]] <- CTS.externalIdSubset(CTSinfo,"HMDB")[[1]]
+		}else{
+			link[["HMDB"]] <- NA
+		}
 		# KEGG
-		if("KEGG" %in% CTS.externalIdTypes(CTSinfo))
+		if("KEGG" %in% CTS.externalIdTypes(CTSinfo)){
 			link[["KEGG"]] <- CTS.externalIdSubset(CTSinfo,"KEGG")[[1]]
+		}else{
+			link[["KEGG"]] <- NA
+		}
 		# LipidMAPS
-		if("LipidMAPS" %in% CTS.externalIdTypes(CTSinfo))
+		if("LipidMAPS" %in% CTS.externalIdTypes(CTSinfo)){
 			link[["LIPIDMAPS"]] <- CTS.externalIdSubset(CTSinfo,"LipidMAPS")[[1]]
+		}else{
+			link[["LIPIDMAPS"]] <- NA
+		}
 	}
 	# PubChem CID
 	if(is.na(PcInfo$PcID[1])){
@@ -929,6 +965,10 @@ gatherData <- function(id)
 			{
 				pc <- CTS.externalIdSubset(CTSinfo,"PubChem CID")
 				link[["PUBCHEM"]] <- paste0(min(pc))
+			}else{
+				link[["PUBCHEM"]] <- NA
+			}else{
+				link[["PUBCHEM"]] <- NA
 			}
 		}
 	} else{
@@ -1014,6 +1054,7 @@ gatherData <- function(id)
 #' @export
 gatherDataBabel <- function(id){
 
+	        ##browser()
 
 		.checkMbSettings()
 		babeldir <- getOption("RMassBank")$babeldir
@@ -1204,6 +1245,7 @@ gatherDataBabel <- function(id){
 #' @export
 gatherDataUnknown <- function(id, mode, retrieval){
     
+    ## browser()
 
     .checkMbSettings()
     ##Read from Compoundlist
@@ -1391,6 +1433,7 @@ flatten <- function(mbdata)
 {
   .checkMbSettings()
   
+  ##browser()
 
   colNames     <- names(unlist(mbdata[[1]]))
   commentNames <- colNames[grepl(x = colNames, pattern = "^COMMENT\\.")]
@@ -1465,6 +1508,7 @@ readMbdata <- function(row)
 {
   .checkMbSettings()
   
+  ##browser()
 
   # Listify the table row. Lists are just cooler to work with :)
   row <- as.list(row)
@@ -1657,7 +1701,8 @@ annotator.default <- function(annotation, formulaTag)
 #' 
 .parseTitleString <- function(mbdata)
 {
-	
+        ##browser()	
+
 	varlist <- getOption("RMassBank")$titleFormat
 	
 	# Set the standard title format.
@@ -1670,7 +1715,6 @@ annotator.default <- function(annotation, formulaTag)
 					"{AC$INSTRUMENT_TYPE}",
 					"{AC$MASS_SPECTROMETRY: MS_TYPE}",
 					"CE: {RECORD_TITLE_CE}",
-					"R={AC$MASS_SPECTROMETRY: RESOLUTION}",
 					"{MS$FOCUSED_ION: PRECURSOR_TYPE}"
 			)
 		}
@@ -1681,7 +1725,6 @@ annotator.default <- function(annotation, formulaTag)
 					"{AC$INSTRUMENT_TYPE}",
 					"{AC$ANALYTICAL_CONDITION: MS_TYPE}",
 					"CE: {RECORD_TITLE_CE}",
-					"R={AC$ANALYTICAL_CONDITION: RESOLUTION}",
 					"{MS$FOCUSED_ION: PRECURSOR_TYPE}"
 			)
 		}
