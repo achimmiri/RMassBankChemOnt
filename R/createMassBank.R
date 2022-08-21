@@ -889,7 +889,7 @@ gatherData <- function(id)
 			# Prefer database CAS if it is also listed in the CTS results.
 			# otherwise take the shortest one.
 			cas <- CTS.externalIdSubset(CTSinfo,"CAS")
-			if(getCtsRecord(inchikey_split))
+			if(dbcas %in% cas)
 				link[["CAS"]] <- dbcas
 			else
 				link[["CAS"]] <- cas[[which.min(nchar(cas))]]
