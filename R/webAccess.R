@@ -77,15 +77,15 @@ retrieveDataWithRetry <- function(url, timeout, maximumNumberOfRetries = 5, retr
 getCactus <- function(identifier,representation){
   identifier <- gsub('#', '%23', identifier)
   ret <- tryCatch(httr::GET(paste("https://cactus.nci.nih.gov/chemical/structure/",
-                            URLencode(identifier), "/", representation, sep = "")),
+                                  URLencode(identifier), "/", representation, sep = "")),
                   error = function(e) NA)
   if (all(is.na(ret)))
     return(NA)
   if (ret["status_code"] == 404)
     return(NA)
-  ret <- httr::content(ret)
-  return(unlist(strsplit(ret, "\n")))
-  
+  ret <- tryCatch({httr::content(ret)},error = function(x) {return(NA)})
+  return(tryCatch({unlist(strsplit(ret, "\n"))},error = function(x) {return(NA)}))
+
 }
 
 #' Search Pubchem CID
@@ -109,45 +109,98 @@ getCactus <- function(identifier,representation){
 #' getPcId("MKXZASYAUGDDCJ-NJAFHUGGSA-N")
 #' 
 #' @export
-getPcId <- function(query, from = "inchikey")
-{
-	baseURL <- "https://pubchem.ncbi.nlm.nih.gov/rest/pug/compound"
-	url <- paste(baseURL, from, query, "description", "json", sep="/")
-	
-	errorvar <- 0
-	currEnvir <- environment()
-	
-	tryCatch(
-    {#		data <- getURL(URLencode(url),timeout=8),
-	    res <- GET(URLencode(url))
-	    data <- httr::content(res, type="text", encoding="UTF-8")
-    },
-		error=function(e){
-		currEnvir$errorvar <- 1
-	})
-	
-	if(errorvar){
-		return(NA)
-	}
-	
-	# This happens if the InChI key is not found:
-	r <- fromJSON(data)
-	
-	if(!is.null(r$Fault))
-	return(NA)
-	
-	titleEntry <- which(unlist(lapply(r$InformationList$Information, function(i) !is.null(i$Title))))
-	
-	titleEntry <- titleEntry[which.min(sapply(titleEntry, function(x)r$InformationList$Information[[x]]$CID))]
 
-	PcID <- r$InformationList$Information[[titleEntry]]$CID
-	
-	if(is.null(PcID)){
-		return(NA)
-	} else{
-		return(PcID)
-	}
+
+ConvINKtoOID1<-function(getINK)
+{
+  ################################
+  url<-"http://pubchem.ncbi.nlm.nih.gov/rest/pug/compound/inchikey/"
+  out<-tryCatch({jsonlite::fromJSON(paste0(url,getINK, "/property/CanonicalSMILES,MonoisotopicMass,InChI,InChIKey"))}, error = function(x) {return(NA)})
+  #################################
+  OIK<-tryCatch({out$PropertyTable$Properties$InChIKey},error=function(cond){return(NA)})
+  OIN<-tryCatch({out$PropertyTable$Properties$InChI},error=function(cond){return(NA)})
+  OSM<-tryCatch({out$PropertyTable$Properties$CanonicalSMILES},error=function(cond){return(NA)})
+  OCID<-tryCatch({out$PropertyTable$Properties$CID},error=function(cond){return(NA)})
+  EXM<-tryCatch({out$PropertyTable$Properties$MonoisotopicMass},error=function(cond){return(0)})
+  #################################
+  return(c(tryCatch({OIN[1]},error = function(x) {return(NA)}),tryCatch({OIK[1]},error = function(x) {return(NA)}),tryCatch({OSM[1]},error = function(x) {return(NA)}),tryCatch({OCID[1]},error = function(x) {return(NA)}),tryCatch({EXM[1]},error = function(x) {return(0)})))
+  #################################
 }
+
+
+
+
+##getPcId <- function(query, from = "inchikey")
+##{
+
+	##browser()	
+##	print(query)
+
+
+##	baseURL <- "https://pubchem.ncbi.nlm.nih.gov/rest/pug/compound"
+	##url <- paste(baseURL, from, query, "description", "json", sep="/")
+	
+	##errorvar <- 0
+	##currEnvir <- environment()
+	
+##	tryCatch(
+  ##  {      #data <- getURL(URLencode(url),timeout=8),
+	    ##res <- GET(URLencode(url))
+	    ##data <- httr::content(res, type="text", encoding="UTF-8")
+##	    res <- tryCatch({GET(URLencode(url))},error=function(cond){return(NA)})
+##	    data <- tryCatch({httr::content(res, type="text", encoding="UTF-8")},error=function(cond){return(NA)})
+  ##  },
+##		error=function(e){
+##		currEnvir$errorvar <- 1
+##	})
+	
+##	if(errorvar){
+##		return(NA)
+##	}
+	
+        ##print(res)
+	##print(data)
+	##print(typeof(data))
+
+      ## print(tryCatch({GET(URLencode(url))},error=function(cond){return(NA)}))
+      ## print(tryCatch({httr::content(res, type="text", encoding="UTF-8")},error=function(cond){return(NA)}))
+
+      ## res <- tryCatch({GET(URLencode(url))},error=function(cond){return(NA)})
+      ## data <- tryCatch({httr::content(res, type="text", encoding="UTF-8")},error=function(cond){return(NA)})
+
+
+      ## print(res)
+      ## print(data)
+
+	# This happens if the InChI key is not found:
+##	r <- tryCatch({fromJSON(data)},error=function(cond){return(NA)})
+	
+##	if(!is.null(tryCatch({r$Fault},error=function(cond){return(NA)})))
+##	return(NA)
+	
+	##titleEntry <- which(unlist(lapply(r$InformationList$Information, function(i) !is.null(i$Title))))
+	
+	##titleEntry <- titleEntry[which.min(sapply(titleEntry, function(x)r$InformationList$Information[[x]]$CID))]
+
+	##PcID <- r$InformationList$Information[[titleEntry]]$CID
+
+##	titleEntry <- tryCatch({which(unlist(lapply(r$InformationList$Information, function(i) !is.null(i$Title))))},error=function(cond){return(NA)})
+##
+##	titleEntry <- tryCatch({titleEntry[which.min(sapply(titleEntry, function(x)r$InformationList$Information[[x]]$CID))]},error=function(cond){return(NA)})
+
+##	PcID <- tryCatch({r$InformationList$Information[[titleEntry]]$CID},error=function(cond){return(NA)})
+
+ ##       PcID <- tryCatch({ConvINKtoOID1(query)[4]},error=function(cond){return(NA)})
+
+
+##	##if(is.null(PcID)){
+##	if(!sjmisc::is_empty(PcID)){
+##		##return(NA)
+##		return(tryCatch({as.numeric(webchem::get_cid(query,from = "inchikey")[[2]])},error=function(cond){return(NA)}))
+##	} else{
+##		return(PcID)
+##	}
+##}
 
 # The following function is unfinished.
 # getPcRecord <- function(pcid)
@@ -168,9 +221,106 @@ getPcId <- function(query, from = "inchikey")
 
 
 
+getCactus <- function(identifier,representation){
+  identifier <- gsub('#', '%23', identifier)
+  ret <- tryCatch(httr::GET(paste("https://cactus.nci.nih.gov/chemical/structure/",
+                                  URLencode(identifier), "/", representation, sep = "")),
+                  error = function(e) NA)
+  if (all(is.na(ret)))
+    return(NA)
+  if (ret["status_code"] == 404)
+    return(NA)
+  ret <- tryCatch({httr::content(ret)},error = function(x) {return(NA)})
+  return(tryCatch({unlist(strsplit(ret, "\n"))},error = function(x) {return(NA)}))
+
+}
 
 
+PuInKtoSM<-function(getINK)
+{
+  ###### This Functions return canonical smiles
+  url<- "https://pubchem.ncbi.nlm.nih.gov/rest/pug/compound/inchikey/"
+  out<-tryCatch({jsonlite::fromJSON(paste0(url,getINK, "/JSON"))} ,error = function(x) {return(NA)})
+  prop.names  <-tryCatch({out$PC_Compounds$props[[1]][[1]]},error = function(x) {return(NA)})
+  prop.values <- tryCatch({out$PC_Compounds$props[[1]][[2]]},error = function(x) {return(NA)})
+  sm <-tryCatch({grep("smiles", prop.names[,"label"], ignore.case = TRUE)},error = function(x) {return(NA)})
+  csmiles<-c()
+  if(length(sm) >= 1 & !sjmisc::is_empty(sm)) {
+    can <- tryCatch({grep("canonical", prop.names[,"name"], ignore.case = TRUE)},error= function(x) {return(NA)})
+    can1<-tryCatch({prop.values[sm[1],"sval"]},warning= function(x) {return(NA)})
+    csmiles<-c(csmiles,can1)
+  }else{
+    csmiles<-c(csmiles,NA)
+  }
+  return(csmiles)
 
+}
+
+ConvINKtoOID<-function(getINK)
+{
+  ### ####This function return INCHIKEY to other identifiers like Inchi,Inchikey,Smiles,CompoundID
+  url<- "https://www.metabolomicsworkbench.org/rest/compound/inchi_key/"
+  out<-tryCatch({jsonlite::fromJSON(paste0(url,getINK, "/all"))}, error = function(x) {return(NA)})
+  ###########################
+  OIK<-tryCatch({out$inchi_key},error=function(cond){return(NA)})
+  OSM<-tryCatch({out$smiles},error=function(cond){return(NA)})
+  OCID<-tryCatch({out$pubchem_cid},error=function(cond){return(NA)})
+  OEM<-tryCatch({out$exactmass},error=function(cond){return(NA)})
+  OFOR<-tryCatch({out$formula},error=function(cond){return(NA)})
+  ###########################
+  return(c(tryCatch({OIK[1]},error = function(x) {return(NA)}),tryCatch({OSM[1]},error = function(x) {return(NA)}),tryCatch({OCID[1]},error = function(x) {return(NA)}),tryCatch({OEM[1]},error = function(x) {return(0)}),tryCatch({OFOR[1]},error = function(x) {return(NA)})))
+
+  ###########################
+
+}
+
+#############################################################################
+#############################################################################
+ConvINKtoOID1<-function(getINK)
+{
+  ################################
+  url<-"http://pubchem.ncbi.nlm.nih.gov/rest/pug/compound/inchikey/"
+  out<-tryCatch({jsonlite::fromJSON(paste0(url,getINK, "/property/CanonicalSMILES,MonoisotopicMass,InChI,InChIKey"))}, error = function(x) {return(NA)})
+  #################################
+  OIK<-tryCatch({out$PropertyTable$Properties$InChIKey},error=function(cond){return(NA)})
+  OIN<-tryCatch({out$PropertyTable$Properties$InChI},error=function(cond){return(NA)})
+  OSM<-tryCatch({out$PropertyTable$Properties$CanonicalSMILES},error=function(cond){return(NA)})
+  OCID<-tryCatch({out$PropertyTable$Properties$CID},error=function(cond){return(NA)})
+  EXM<-tryCatch({out$PropertyTable$Properties$MonoisotopicMass},error=function(cond){return(0)})
+  #################################
+  return(c(tryCatch({OIN[1]},error = function(x) {return(NA)}),tryCatch({OIK[1]},error = function(x) {return(NA)}),tryCatch({OSM[1]},error = function(x) {return(NA)}),tryCatch({OCID[1]},error = function(x) {return(NA)}),tryCatch({EXM[1]},error = function(x) {return(0)})))
+  #################################
+}
+
+
+PuSMtoCID<-function(getSMILES)
+{
+  url<-"https://pubchem.ncbi.nlm.nih.gov/rest/pug/compound/smiles/"
+
+  out<-tryCatch({jsonlite::fromJSON(paste0(url,getSMILES, "/cids"))} ,error = function(x) {return(NA)})
+
+  return(tryCatch({out[[1]]$CID},error = function(x) {return(NA)}))
+
+}
+
+
+getPcId <- function(query, from = "inchikey")
+{
+	##browser()
+
+        PcID <- tryCatch({ConvINKtoOID1(query)[4]},error=function(cond){return(NA)})
+        IK <- query
+
+        if(!sjmisc::is_empty(PcID)){
+                ##return(NA)
+		PCV=tryCatch({webchem::get_cid(IK,from = "inchikey")[[2]][1]},error=function(cond){return(NA)})
+		PCV1=tryCatch({webchem::cs_convert(IK,from = "inchikey", to = "csid")},error=function(cond){return(NA)})
+		return(ifelse(!sjmisc::is_empty(PCV),as.numeric(PCV),ifelse(!sjmisc::is_empty(PCV1),PCV1,tryCatch({ConvINKtoOID(IK)[2]},error=function(cond){return(NA)}))))
+                ####return(tryCatch({as.numeric(webchem::get_cid(query,from = "inchikey")[[2]][1])},error=function(cond){return(NA)}))
+        } else{
+                return(PcID)
+        }
+}
 
 
 #' Retrieve information from CTS
@@ -428,10 +578,10 @@ getPcCHEBI <- function(query, from = "inchikey")
 #' @author Michele Stravs, Eawag <stravsmi@@eawag.ch>
 #' @author Erik Mueller, UFZ <erik.mueller@@ufz.de>
 #' @export
-getCSID <- function(query)
-{
-	baseURL <- "http://www.chemspider.com/InChI.asmx/InChIKeyToCSID?inchi_key="
-	url <- paste0(baseURL, query)
+##getCSID <- function(query)
+##{
+###	baseURL <- "http://www.chemspider.com/InChI.asmx/InChIKeyToCSID?inchi_key="
+###	url <- paste0(baseURL, query)
 	
 	#errorvar <- 0
 	#currEnvir <- environment()
@@ -447,18 +597,30 @@ getCSID <- function(query)
 	#	return(NA)
 	#}
 	
-	data <- retrieveDataWithRetry(url = URLencode(url), timeout=8)
-	if(is.null(data)){
-		warning("Chemspider is currently offline")
-		return(NA)
-	}
+###	data <- retrieveDataWithRetry(url = URLencode(url), timeout=8)
+###	if(is.null(data)){
+####		warning("Chemspider is currently offline")
+###		return(NA)
+###	}
 	
-	xml <- xmlParseDoc(data,asText=TRUE)
-	# the returned XML document contains only the root node called "string" which contains the correct CSID
-	idNodes <- getNodeSet(xml, "/")
-	id <- xmlValue(idNodes[[1]])
-	return(id)
-} 
+##	xml <- xmlParseDoc(data,asText=TRUE)
+##	# the returned XML document contains only the root node called "string" which contains the correct CSID
+##	idNodes <- getNodeSet(xml, "/")
+##	id <- xmlValue(idNodes[[1]])
+##	return(id)
+##} 
+
+
+getCSID <- function(query)
+{
+	CS<-query
+	SM<-tryCatch({getCactus(IK,"cid")},error=function(cond){message("Inchikey to smile conversion")})
+	gCID=ifelse(!sjmisc::is_empty(tryCatch({webchem::cs_convert(CS,from = "inchikey", to = "csid")},error=function(cond){message("Inchikey to csid conversion")})),tryCatch({webchem::cs_convert(CS,from = "inchikey", to = "csid")},error=function(cond){message("Inchikey to smile conversion")}),ifelse(!sjmisc::is_empty(tryCatch({as.numeric(ConvINKtoOID1(IK)[4])},error=function(cond){message("Inchikey to smile conversion")})),tryCatch({as.numeric(ConvINKtoOID1(IK)[4])},error=function(cond){message("Inchikey to smile conversion")}),tryCatch({PuSMtoCID(SM)},error = function(x) {return(NA)})))
+	return(gCID)
+
+}
+
+
 
 ##This function returns a sensible name for the compound
 getPcSynonym <- function (query, from = "inchikey")
@@ -556,42 +718,69 @@ getPcIUPAC <- function (query, from = "inchikey")
 	}
 } 
 
-getPcInchiKey <- function(query, from = "smiles"){
+##getPcInchiKey <- function(query, from = "smiles"){
 	# Get the JSON-Data from Pubchem
-	baseURL <- "https://pubchem.ncbi.nlm.nih.gov/rest/pug/compound"
-	url <- paste(baseURL, from, query, "record", "json", sep="/")
-	errorvar <- 0
-	currEnvir <- environment()
+##	baseURL <- "https://pubchem.ncbi.nlm.nih.gov/rest/pug/compound"
+##	url <- paste(baseURL, from, query, "record", "json", sep="/")
+##	errorvar <- 0
+##	currEnvir <- environment()
 	
-	tryCatch(
-		{#data <- getURL(URLencode(url),timeout=8)
-		  res <- GET(URLencode(url))
-		  data <- httr::content(res, type="text", encoding="UTF-8")
-		},
-		error=function(e){
-		currEnvir$errorvar <- 1
-	})
+##	tryCatch(
+##		{#data <- getURL(URLencode(url),timeout=8)
+##		  res <- GET(URLencode(url))
+##		  data <- httr::content(res, type="text", encoding="UTF-8")
+##		},
+##		error=function(e){
+##		currEnvir$errorvar <- 1
+##	})
 	
-	if(errorvar){
-		return(NA)
-	}
+##	if(errorvar){
+##		return(NA)
+##	}
 	
-	r <- fromJSON(data)
+##	r <- tryCatch({fromJSON(data)},error=function(e){return(NA)})
 	
-	# This happens if the InChI key is not found:
-	if(!is.null(r$Fault))
-	return(NA)
+###	# This happens if the InChI key is not found:
+##	if(!is.null(r$Fault))
+	##if(!is.null(tryCatch({r$Fault},error=function(e){return(NA)})))
+##	return(NA)
 	
-	# Find the entries which contain Chebi-links
-	if(!is.null(r$PC_Compounds[[1]]$props)){
-		INKEYindex <- which(sapply(r$PC_Compounds[[1]]$props, function(x) x$urn$label) == "InChIKey")
-		if(length(INKEYindex) > 0){
-			return(r$PC_Compounds[[1]]$props[[INKEYindex]]$value$sval)
-		}	else{return(NA)}
-	}	else{return(NA)}
+##	# Find the entries which contain Chebi-links
+##	if(!is.null(r$PC_Compounds[[1]]$props)){
+##		INKEYindex <- which(sapply(r$PC_Compounds[[1]]$props, function(x) x$urn$label) == "InChIKey")
+##		if(length(INKEYindex) > 0){
+##			return(r$PC_Compounds[[1]]$props[[INKEYindex]]$value$sval)
+##		}	else{return(NA)}
+##	}	else{return(NA)}
+##
+	
+##}
 
-	
+
+
+
+getPcInchiKey <- function(query, from = "smiles"){
+
+      IK<-query
+      tes<-tryCatch({webchem::get_cid(IK, from = "inchikey")},error=function(cond){return(NA)})
+      tes1<-tryCatch({tes$cid},error=function(cond){return(NA)})
+      tes2<-tryCatch({webchem::pc_prop(as.numeric(tes1[1]), properties = c("MolecularFormula", "MolecularWeight","CanonicalSMILES","InChI","InChIKey"))},error=function(cond){return(NA)})
+      IN<-tryCatch({tes2$InChI},error=function(cond){return(NA)})
+      SM<-tryCatch({tes2$CanonicalSMILES},error=function(cond){return(NA)})
+      SM1=ifelse(!sjmisc::is_empty(SM),SM,ifelse(!sjmisc::is_empty(tryCatch({PuInKtoSM(IK)},error=function(cond){message("Inchikey to smile conversion")})),tryCatch({PuInKtoSM(IK)},error=function(cond){message("Inchikey to smile conversion")}),ifelse(!sjmisc::is_empty(tryCatch({getCactus(IK,"smiles")},error=function(cond){message("Inchikey to smile conversion")})),tryCatch({getCactus(IK,"smiles")},error=function(cond){message("Inchikey to smile conversion")}),tryCatch({ConvINKtoOID1(IK)[3]},error=function(cond){message("INK to smile conversion")}))))
+      if(!sjmisc::is_empty(SM1))
+      {
+	      return(SM1)
+      }else{
+	      return(NA)
+      }
+
 }
+
+
+
+
+
 
 getPcSDF <- function(query, from = "smiles"){
 	baseURL <- "https://pubchem.ncbi.nlm.nih.gov/rest/pug/compound"
