@@ -120,9 +120,9 @@ loadInfolist <- function(mb, fileName)
     colnames(mbdata_new)[[which(colnames(mbdata_new)=="dbname_d")]] <- "dbname"
     # dbname_e will be dropped because of the select= in the subset below.
   }
-  if("COMMENT.EAWAG_UCHEM_ID" %in% colnames(mbdata_new))
-    colnames(mbdata_new)[[which(colnames(mbdata_new)== "COMMENT.EAWAG_UCHEM_ID")]] <-
-      "COMMENT.ID"
+  ##if("COMMENT.EAWAG_UCHEM_ID" %in% colnames(mbdata_new))
+    ###colnames(mbdata_new)[[which(colnames(mbdata_new)== "COMMENT.EAWAG_UCHEM_ID")]] <-
+      ###"COMMENT.ID"
   
   # Clear from padding spaces and NAs
   mbdata_new <- as.data.frame(x = t(apply(mbdata_new, 1, function(r) 
@@ -568,7 +568,8 @@ findOnt <- function(cpdID) {
     stop("Compound list must be loaded first.")
   if(!exists("compoundList", where=.listEnvEnv$listEnv))
     stop("Compound list must be loaded first.")
-  if(.listEnvEnv$listEnv$compoundList[match(cpdID, .listEnvEnv$listEnv$compoundList$ID),"Ontology"] == "")
+  if(.listEnvEnv$listEnv$compoundList[match(cpdID, .listEnvEnv$listEnv$compoundList$ID),"Ontology"] == "" || is.na(.listEnvEnv$listEnv$compoundList[match(cpdID, .listEnvEnv$listEnv$compoundList$ID),"Ontology"]))
+  ##if(.listEnvEnv$listEnv$compoundList[match(cpdID, .listEnvEnv$listEnv$compoundList$ID),"Ontology"] == "")
     return(NA)
   return(.listEnvEnv$listEnv$compoundList[match(cpdID, .listEnvEnv$listEnv$compoundList$ID),"Ontology"])
 }
@@ -581,7 +582,7 @@ PRECURSORTYPE<- function(cpdID){
     stop("Compound list must be loaded first.")
   if(!exists("compoundList", where=.listEnvEnv$listEnv))
     stop("Compound list must be loaded first.")
-  if(.listEnvEnv$listEnv$compoundList[match(cpdID, .listEnvEnv$listEnv$compoundList$ID),"Adduct"] == "")
+  if(.listEnvEnv$listEnv$compoundList[match(cpdID, .listEnvEnv$listEnv$compoundList$ID),"Adduct"] == "" || is.na(.listEnvEnv$listEnv$compoundList[match(cpdID, .listEnvEnv$listEnv$compoundList$ID),"Adduct"] ))
     return(NA)
   return(.listEnvEnv$listEnv$compoundList[match(cpdID, .listEnvEnv$listEnv$compoundList$ID),"Adduct"])
 
@@ -596,7 +597,7 @@ findBpeak <- function(cpdID) {
                 stop("Compound list must be loaded first.")
         if(!exists("compoundList", where=.listEnvEnv$listEnv))
                 stop("Compound list must be loaded first.")
-	if(.listEnvEnv$listEnv$compoundList[match(cpdID, .listEnvEnv$listEnv$compoundList$ID),"Bpeak"] == "")
+	if(.listEnvEnv$listEnv$compoundList[match(cpdID, .listEnvEnv$listEnv$compoundList$ID),"Bpeak"] == "" || is.na(.listEnvEnv$listEnv$compoundList[match(cpdID, .listEnvEnv$listEnv$compoundList$ID),"Bpeak"]))
     	  return(NA)
   	return(.listEnvEnv$listEnv$compoundList[match(cpdID, .listEnvEnv$listEnv$compoundList$ID),"Bpeak"])
 
@@ -610,7 +611,7 @@ findCenergy <- function(cpdID) {
                 stop("Compound list must be loaded first.")
         if(!exists("compoundList", where=.listEnvEnv$listEnv))
                 stop("Compound list must be loaded first.")
-	if(.listEnvEnv$listEnv$compoundList[match(cpdID, .listEnvEnv$listEnv$compoundList$ID),"Cenergy"] == "")
+	if(.listEnvEnv$listEnv$compoundList[match(cpdID, .listEnvEnv$listEnv$compoundList$ID),"Cenergy"] == "" || is.na(.listEnvEnv$listEnv$compoundList[match(cpdID, .listEnvEnv$listEnv$compoundList$ID),"Cenergy"]))
 	  return(NA)
 	return(.listEnvEnv$listEnv$compoundList[match(cpdID, .listEnvEnv$listEnv$compoundList$ID),"Cenergy"])
 
@@ -624,7 +625,7 @@ findIM <- function(cpdID) {
                 stop("Compound list must be loaded first.")
         if(!exists("compoundList", where=.listEnvEnv$listEnv))
                 stop("Compound list must be loaded first.")
-	if(.listEnvEnv$listEnv$compoundList[match(cpdID, .listEnvEnv$listEnv$compoundList$ID),"IM"] == "")
+	if(.listEnvEnv$listEnv$compoundList[match(cpdID, .listEnvEnv$listEnv$compoundList$ID),"IM"] == "" || is.na(.listEnvEnv$listEnv$compoundList[match(cpdID, .listEnvEnv$listEnv$compoundList$ID),"IM"]))
 	 return(NA)
 	return(.listEnvEnv$listEnv$compoundList[match(cpdID, .listEnvEnv$listEnv$compoundList$ID),"IM"])
 
@@ -638,7 +639,7 @@ findNAME <- function(cpdID) {
                 stop("Compound list must be loaded first.")
         if(!exists("compoundList", where=.listEnvEnv$listEnv))
                 stop("Compound list must be loaded first.")
-	if(.listEnvEnv$listEnv$compoundList[match(cpdID, .listEnvEnv$listEnv$compoundList$ID),"Name"] == "")
+	if(.listEnvEnv$listEnv$compoundList[match(cpdID, .listEnvEnv$listEnv$compoundList$ID),"Name"] == "" || is.na(.listEnvEnv$listEnv$compoundList[match(cpdID, .listEnvEnv$listEnv$compoundList$ID),"Name"]))
 		return(NA)
 	return(.listEnvEnv$listEnv$compoundList[match(cpdID, .listEnvEnv$listEnv$compoundList$ID),"Name"])
 
@@ -654,6 +655,66 @@ smiles2mass <- function(SMILES){
         return(mass)
 }
 
+
+findCompoundClass <- function(cpdID) {
+
+        if(is.character(cpdID))
+                cpdID <- as.numeric(cpdID)
+        if(is.null(.listEnvEnv$listEnv))
+                stop("Compound list must be loaded first.")
+        if(!exists("compoundList", where=.listEnvEnv$listEnv))
+                stop("Compound list must be loaded first.")
+        if(.listEnvEnv$listEnv$compoundList[match(cpdID, .listEnvEnv$listEnv$compoundList$ID),"CClass"] == "" || is.na(.listEnvEnv$listEnv$compoundList[match(cpdID, .listEnvEnv$listEnv$compoundList$ID),"CClass"]))
+          return(NA)
+        return(.listEnvEnv$listEnv$compoundList[match(cpdID, .listEnvEnv$listEnv$compoundList$ID),"CClass"])
+
+}
+
+
+findCONFIDENCE <- function(cpdID) {
+
+        if(is.character(cpdID))
+                cpdID <- as.numeric(cpdID)
+        if(is.null(.listEnvEnv$listEnv))
+                stop("Compound list must be loaded first.")
+        if(!exists("compoundList", where=.listEnvEnv$listEnv))
+                stop("Compound list must be loaded first.")
+        if(.listEnvEnv$listEnv$compoundList[match(cpdID, .listEnvEnv$listEnv$compoundList$ID),"CONFIDENCE"] == "" || is.na(.listEnvEnv$listEnv$compoundList[match(cpdID, .listEnvEnv$listEnv$compoundList$ID),"CONFIDENCE"])) 
+          return(NA)
+        return(.listEnvEnv$listEnv$compoundList[match(cpdID, .listEnvEnv$listEnv$compoundList$ID),"CONFIDENCE"])
+
+}
+
+
+
+findPUBLICATION<- function(cpdID) {
+
+        if(is.character(cpdID))
+                cpdID <- as.numeric(cpdID)
+        if(is.null(.listEnvEnv$listEnv))
+                stop("Compound list must be loaded first.")
+        if(!exists("compoundList", where=.listEnvEnv$listEnv))
+                stop("Compound list must be loaded first.")
+        if(.listEnvEnv$listEnv$compoundList[match(cpdID, .listEnvEnv$listEnv$compoundList$ID),"PUBLICATION"] == "" || is.na(.listEnvEnv$listEnv$compoundList[match(cpdID, .listEnvEnv$listEnv$compoundList$ID),"PUBLICATION"]))
+          return(NA)
+        return(.listEnvEnv$listEnv$compoundList[match(cpdID, .listEnvEnv$listEnv$compoundList$ID),"PUBLICATION"])
+
+}
+
+
+findEXMA<-function(cpdID) {
+
+        if(is.character(cpdID))
+                cpdID <- as.numeric(cpdID)
+        if(is.null(.listEnvEnv$listEnv))
+                stop("Compound list must be loaded first.")
+        if(!exists("compoundList", where=.listEnvEnv$listEnv))
+                stop("Compound list must be loaded first.")
+        if(.listEnvEnv$listEnv$compoundList[match(cpdID, .listEnvEnv$listEnv$compoundList$ID),"EXMA"] == "" || is.na(.listEnvEnv$listEnv$compoundList[match(cpdID, .listEnvEnv$listEnv$compoundList$ID),"PUBLICATION"]))
+          return(NA)
+        return(.listEnvEnv$listEnv$compoundList[match(cpdID, .listEnvEnv$listEnv$compoundList$ID),"EXMA"])
+
+}
 
 
 gatherData <- function(id)
@@ -708,12 +769,15 @@ gatherData <- function(id)
 		cmdinchikey <- paste0(babeldir, 'obabel -:"',smiles,'" ', '-oinchikey')
 		inchikey_split <- system(cmdinchikey, intern=TRUE, input=smiles, ignore.stderr=TRUE)
 	} else{
-		inchikey <- getCactus(smiles, 'stdinchikey')
+		##inchikey <- getCactus(smiles, 'stdinchikey')
+		inchikey <- tryCatch({getCactus(smiles, 'stdinchikey')},error=function(cond){message("stdinchikey value is empty")})
 		if(!is.na(inchikey)){
 			##Split the "InChiKey=" part off the key
-			inchikey_split <- strsplit(inchikey, "=", fixed=TRUE)[[1]][[2]]
+			##inchikey_split <- strsplit(inchikey, "=", fixed=TRUE)[[1]][[2]]
+			inchikey_split <- tryCatch({strsplit(inchikey, "=", fixed=TRUE)[[1]][[2]]},error=function(cond){message("inchikey_split value is empty")})
 		} else{
-		    inchikey_split <- getPcInchiKey(smiles)
+		    ##inchikey_split <- getPcInchiKey(smiles)
+		    inchikey_split <- tryCatch({getPcInchiKey(smiles)},error=function(cond){message("getPcInchiKey value is empty")})	
 		}
 	}
 	
@@ -721,19 +785,23 @@ gatherData <- function(id)
 	PcInfo <- gatherPubChem(inchikey_split)
 	
 	if(!is.null(PcInfo$Synonym) & !is.na(PcInfo$Synonym)){
-		synonym <- PcInfo$Synonym
+		##synonym <- PcInfo$Synonym
+		synonym <- tryCatch({PcInfo$Synonym},error=function(cond){message("PcInfo$Synonym value is empty")})
 	}
 	
 	if(!is.null(PcInfo$IUPAC) & !is.na(PcInfo$IUPAC)){
-		iupacName <- PcInfo$IUPAC
+		##iupacName <- PcInfo$IUPAC
+		iupacName <- tryCatch({PcInfo$IUPAC},error=function(cond){message("PcInfo$IUPAC value is empty")})
 	}
 	
 	##Get Chemspider-ID
-	csid <- getCSID(inchikey_split)
+	##csid <- getCSID(inchikey_split)
+	csid <- tryCatch({getCSID(inchikey_split)},error=function(cond){message("getCSID value is empty")})
 	
 	if(is.na(csid)){
 		##Get ChemSpider ID from Cactus if the Chemspider page is down
-		csid <- getCactus(inchikey_split, 'chemspider_id')
+		##csid <- getCactus(inchikey_split, 'chemspider_id')
+		csid <- tryCatch({getCactus(inchikey_split, 'chemspider_id')},error=function(cond){message("getCactus value is empty")})
 	}
 	
 	## ##Get CompTox
@@ -744,9 +812,12 @@ gatherData <- function(id)
 	## }
 	
 	##Use CTS to retrieve information
-	CTSinfo <- getCtsRecord(inchikey_split)
-		
-	if((CTSinfo[1] == "Sorry, we couldn't find any matching results") || is.null(CTSinfo[1]))
+	##CTSinfo <- getCtsRecord(inchikey_split)
+	CTSinfo <- tryCatch({getCtsRecord(inchikey_split)},error=function(cond){return(NA)})
+	
+	if(sjmisc::is_empty(tryCatch({CTSinfo[[1]]},error=function(cond){return(NA)})))
+        ##if(tryCatch({CTSinfo[1]},error=function(cond){return(NA)}) == "Sorry, we couldn't find any matching results") ||	
+	##if((tryCatch({CTSinfo[1]},error=function(cond){return(NA)}) == "Sorry, we couldn't find any matching results") || is.null(tryCatch({CTSinfo[1]},error=function(cond){return(NA)})))
 	{
 		CTSinfo <- NA
 	}
@@ -790,7 +861,7 @@ gatherData <- function(id)
 	mbdata[['DATE']] <- format(Sys.Date(), "%Y.%m.%d")
 	mbdata[['AUTHORS']] <- getOption("RMassBank")$annotations$authors
 	mbdata[['LICENSE']] <- getOption("RMassBank")$annotations$license
-	mbdata[['COPYRIGHT']] <- getOption("RMassBank")$annotations$copyright
+	####mbdata[['COPYRIGHT']] <- getOption("RMassBank")$annotations$copyright
 	#########################################################################
 	# Confidence annotation and internal ID annotation.
 	# The ID of the compound will be written like:
@@ -799,7 +870,9 @@ gatherData <- function(id)
 	###########################################################################
 	mbdata[["COMMENT"]] <- list()
   if(findLevel(id) == "0"){
-	mbdata[["COMMENT"]][["CONFIDENCE"]] <- getOption("RMassBank")$annotations$confidence_comment
+	  ###findCONFIDENCE <- function(cpdID)
+	mbdata[["COMMENT"]][["CONFIDENCE"]] <- findCONFIDENCE(id) 
+	####mbdata[["COMMENT"]][["CONFIDENCE"]] <- getOption("RMassBank")$annotations$confidence_comment
 	} else{
         level <- findLevel(id)
         if(level %in% c("1","1a")){
@@ -837,7 +910,7 @@ gatherData <- function(id)
         }
 	}
 	
-	mbdata[["COMMENT"]][["ID"]] = id
+	#######mbdata[["COMMENT"]][["ID"]] = id
   #####################################################################################
   ## add generic COMMENT information
   rowIdx <- which(.listEnvEnv$listEnv$compoundList$ID == id)
@@ -855,7 +928,11 @@ gatherData <- function(id)
         #######################################
         ##mbdata[['CH$NAME']] <- names
         mbdata[['CH$NAME']] <- NAME
-	mbdata[['CH$COMPOUND_CLASS']] <- getOption("RMassBank")$annotations$compound_class
+        ##########################
+	######mbdata[['CH$COMPOUND_CLASS']] <- getOption("RMassBank")$annotations$compound_class
+        #######################
+        mbdata[['CH$COMPOUND_CLASS']] <- findCompoundClass(id)
+	#######################################
 	mbdata[['CH$FORMULA']] <- formula
 	mbdata[['CH$EXACT_MASS']] <- mass
 	mbdata[['CH$SMILES']] <- smiles
@@ -1125,7 +1202,7 @@ gatherDataBabel <- function(id){
 			mbdata[['DATE']] <- format(Sys.Date(), "%Y.%m.%d")
 			mbdata[['AUTHORS']] <- getOption("RMassBank")$annotations$authors
 			mbdata[['LICENSE']] <- getOption("RMassBank")$annotations$license
-			mbdata[['COPYRIGHT']] <- getOption("RMassBank")$annotations$copyright
+			#####mbdata[['COPYRIGHT']] <- getOption("RMassBank")$annotations$copyright
 			#################################################################
 			# Confidence annotation and internal ID annotation.
 			# The ID of the compound will be written like:
@@ -1134,7 +1211,9 @@ gatherDataBabel <- function(id){
 			##################################################################
 			mbdata[["COMMENT"]] <- list()
 			if(findLevel(id) == "0"){
-			mbdata[["COMMENT"]][["CONFIDENCE"]] <- getOption("RMassBank")$annotations$confidence_comment
+			
+			mbdata[["COMMENT"]][["CONFIDENCE"]] <- findCONFIDENCE(id)	
+			###mbdata[["COMMENT"]][["CONFIDENCE"]] <- getOption("RMassBank")$annotations$confidence_comment
             } else{
                 level <- findLevel(id)
                 if(level %in% c("1","1a")){
@@ -1171,7 +1250,7 @@ gatherDataBabel <- function(id){
                      mbdata[["COMMENT"]][["CONFIDENCE"]] <- "Tentative identification: structure and formula unknown (Level 5)"
                 }
             }
-			mbdata[["COMMENT"]][["ID"]] <- id
+			#####################mbdata[["COMMENT"]][["ID"]] <- id
 
 			# here compound info starts
 			##mbdata[['CH$NAME']] <- as.list(dbname)
@@ -1183,8 +1262,12 @@ gatherDataBabel <- function(id){
 			# in search queries.
 			###############################
 			mbdata[['CH$NAME']] <- NAME
-			mbdata[['CH$COMPOUND_CLASS']] <- getOption("RMassBank")$annotations$compound_class
+			###findCompoundClass(id)
+			mbdata[['CH$COMPOUND_CLASS']] <- findCompoundClass(id)
+			######mbdata[['CH$COMPOUND_CLASS']] <- getOption("RMassBank")$annotations$compound_class
+			#################################################
 			mbdata[['CH$FORMULA']] <- formula
+			#####browser()
 			mbdata[['CH$EXACT_MASS']] <- mass
 			mbdata[['CH$SMILES']] <- smiles
 			mbdata[['CH$IUPAC']] <- inchi
@@ -1309,7 +1392,7 @@ gatherDataUnknown <- function(id, mode, retrieval){
     mbdata[['DATE']] <- format(Sys.Date(), "%Y.%m.%d")
     mbdata[['AUTHORS']] <- getOption("RMassBank")$annotations$authors
     mbdata[['LICENSE']] <- getOption("RMassBank")$annotations$license
-    mbdata[['COPYRIGHT']] <- getOption("RMassBank")$annotations$copyright
+    ####mbdata[['COPYRIGHT']] <- getOption("RMassBank")$annotations$copyright
     ###################################################################
     # Confidence annotation and internal ID annotation.
     # The ID of the compound will be written like:
@@ -1318,7 +1401,8 @@ gatherDataUnknown <- function(id, mode, retrieval){
     ##################################################################
     mbdata[["COMMENT"]] <- list()
     if(findLevel(id) == "0"){
-    mbdata[["COMMENT"]][["CONFIDENCE"]] <- getOption("RMassBank")$annotations$confidence_comment
+    mbdata[["COMMENT"]][["CONFIDENCE"]] <- findCONFIDENCE(id)	    
+    ###mbdata[["COMMENT"]][["CONFIDENCE"]] <- getOption("RMassBank")$annotations$confidence_comment
 	} else{
         level <- findLevel(id)
         if(level %in% c("1","1a")){
@@ -1355,7 +1439,7 @@ gatherDataUnknown <- function(id, mode, retrieval){
              mbdata[["COMMENT"]][["CONFIDENCE"]] <- "Tentative identification: structure and formula unknown (Level 5)"
         }
     }
-    mbdata[["COMMENT"]][["ID"]] <- id
+    #####mbdata[["COMMENT"]][["ID"]] <- id
 
     # here compound info starts
     ##mbdata[['CH$NAME']] <- as.list(dbname)
@@ -1366,7 +1450,10 @@ gatherDataUnknown <- function(id, mode, retrieval){
     # in search queries.
     ####################################
     mbdata[['CH$NAME']] <- NAME
-    mbdata[['CH$COMPOUND_CLASS']] <- getOption("RMassBank")$annotations$compound_class
+    ##findCompoundClass(id)
+    mbdata[['CH$COMPOUND_CLASS']] <- findCompoundClass(id)
+    ########mbdata[['CH$COMPOUND_CLASS']] <- getOption("RMassBank")$annotations$compound_class
+    ################################
     mbdata[['CH$FORMULA']] <- formula
     mbdata[['CH$EXACT_MASS']] <- mass
     mbdata[['CH$SMILES']] <- ""
@@ -1470,7 +1557,7 @@ flatten <- function(mbdata)
               # must use the full name including the info from options("RMassBank").
 	      ####################
 	      "COMMENT.CONFIDENCE",
-              "COMMENT.ID",
+              ####"COMMENT.ID",
               "CH$NAME1",
               "CH$NAME2",
               "CH$NAME3",
@@ -1541,9 +1628,10 @@ readMbdata <- function(row)
   mbdata[['DATE']] <- format(Sys.Date(), "%Y.%m.%d")
   mbdata[['AUTHORS']] <- getOption("RMassBank")$annotations$authors
   mbdata[['LICENSE']] <- getOption("RMassBank")$annotations$license
-  mbdata[['COPYRIGHT']] <- getOption("RMassBank")$annotations$copyright
+  ###mbdata[['COPYRIGHT']] <- getOption("RMassBank")$annotations$copyright
   if(getOption("RMassBank")$annotations$publication!="") {
     mbdata[['PUBLICATION']] <- getOption("RMassBank")$annotations$publication
+      ##mbdata[['PUBLICATION']] <- findPUBLICATION(cpdID)
   }
   commentNames <- names(row)[grepl(x = names(row), pattern = "^COMMENT\\.")]
   commentNames <- commentNames[!is.na(row[commentNames])]
@@ -1562,7 +1650,7 @@ readMbdata <- function(row)
               # must use the full name including the info from options("RMassBank").
               ####################
               "COMMENT.CONFIDENCE",
-              "COMMENT.ID",
+              ######################"COMMENT.ID",
               "CH$NAME1",
               "CH$NAME2",
               "CH$NAME3",
@@ -1593,7 +1681,7 @@ readMbdata <- function(row)
   mbdata[["COMMENT"]] = list()
   #mbdata[["COMMENT"]][["CONFIDENCE"]] <- row[["COMMENT.CONFIDENCE"]]
   # Again, our ID field. 
-  #mbdata[["COMMENT"]][["ID"]] <- row[["COMMENT.ID"]]
+  ##################mbdata[["COMMENT"]][["ID"]] <- row[["COMMENT.ID"]]
   mbdata[["COMMENT"]][gsub(x = commentNames, pattern = "^COMMENT\\.", replacement = "")] <- row[commentNames]
   #####################################
   names = c(row[["CH.NAME1"]], row[["CH.NAME2"]], row[["CH.NAME3"]], row[["CH.NAME4"]], row[["CH.NAME5"]])
@@ -2222,8 +2310,8 @@ gatherDataMinimal.cpd <- function(cpd){
   # The ID of the compound will be written like:
   # COMMENT: EAWAG_UCHEM_ID 1234
   # if annotations$internal_id_fieldname is set to "EAWAG_UCHEM_ID"
-  if(length(cpd@id) > 0)
-    mbdata[["COMMENT"]][["ID"]] <- cpd@id
+  #################if(length(cpd@id) > 0)
+    #############mbdata[["COMMENT"]][["ID"]] <- cpd@id
   
   # here compound info starts
   mbdata[['CH$NAME']] <- cpd@name
@@ -2251,8 +2339,8 @@ gatherDataMinimal.cpd <- function(cpd){
   ##mbdata[["MS.FOCUSED_ION.BASE_PEAK"]]  <- FOCUSED_ION
   ##mbdata[["MS.FOCUSED_ION.PRECURSOR_M/Z"]]   <- FOCUSED_ION
   ########################################
-  print("entering the cpd value ...")
-  print(cpd)
+  ####print("entering the cpd value ...")
+  ####print(cpd)
   ########################################
   return(mbdata)
   #########################################
