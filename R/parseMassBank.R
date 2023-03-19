@@ -29,7 +29,7 @@ parseMassBank <- function(Files){
 		mb@compiled_ok[[i]][['DATE']] <- format(as.Date(substring(grep('DATE:',record, value = TRUE, fixed = TRUE),7), format = "%Y.%m.%d"), "%Y.%m.%d")
 		mb@compiled_ok[[i]][['AUTHORS']] <- substring(grep('AUTHORS:',record, value = TRUE, fixed = TRUE),10)
 		mb@compiled_ok[[i]][['LICENSE']] <- substring(grep('LICENSE:',record, value = TRUE, fixed = TRUE),10)
-		mb@compiled_ok[[i]][['COPYRIGHT']] <- substring(grep('COPYRIGHT:',record, value = TRUE, fixed = TRUE),12)
+		########mb@compiled_ok[[i]][['COPYRIGHT']] <- substring(grep('COPYRIGHT:',record, value = TRUE, fixed = TRUE),12)
 		##publication <- substring(grep('PUBLICATION:',record, fixed = TRUE),14)
 		##if(length(publication) > 0){
 		#mb@compiled_ok[[i]][['PUBLICATION']] <- publication
