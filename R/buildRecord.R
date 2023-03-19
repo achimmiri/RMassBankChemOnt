@@ -227,10 +227,11 @@ setMethod("buildRecord", "RmbSpectrum2", function(o, ..., cpd = NULL, mbdata = l
 	#ac_ms['PRECURSOR_TYPE'] <- precursor_types[spec$mode]
 	if(length(spectrum@info$ce) > 0)
              
-                ac_ms[['COLLISION_ENERGY']] <- mbdata$`AC$MASS_SPECTROMETRY`$COLLISION_ENERGY
+		ac_ms[['COLLISION_ENERGY']] <- spectrum@info$ce
+                ##ac_ms[['COLLISION_ENERGY']] <- mbdata$`AC$MASS_SPECTROMETRY`$COLLISION_ENERGY
 	else
 		ac_ms[['COLLISION_ENERGY']] <- mbdata$`AC$MASS_SPECTROMETRY`$COLLISION_ENERGY
-	        ac_ms[['RESOLUTION']] <- spectrum@info$res
+	        ##ac_ms[['RESOLUTION']] <- spectrum@info$res
 
 	# Calculate exact precursor mass with Rcdk, and find the base peak from the parent
 	# spectrum. (Yes, that's what belongs here, I think.)
@@ -265,10 +266,12 @@ setMethod("buildRecord", "RmbSpectrum2", function(o, ..., cpd = NULL, mbdata = l
 	{
 		if(length(ac_ms) >0)
 			################################################
-                        ac_ms$ION_MODE= mbdata$`AC$MASS_SPECTROMETRY`$ION_MODE
+                        ##ac_ms$ION_MODE= mbdata$`AC$MASS_SPECTROMETRY`$ION_MODE
+			ac_ms$ION_MODE = base::toupper(mbdata$`AC$MASS_SPECTROMETRY`$ION_MODE)
 			mbdata[["AC$MASS_SPECTROMETRY"]] <- ac_ms
 		if(length(ac_lc) >0)
 			mbdata[["AC$CHROMATOGRAPHY"]] <- ac_lc
+		        #################################################
 	}
 	else
 	{
@@ -307,7 +310,8 @@ setMethod("buildRecord", "RmbSpectrum2", function(o, ..., cpd = NULL, mbdata = l
 
 	if(length(spectrum@info$ces) > 0)
 
-		mbdata[['RECORD_TITLE_CE']] <- mbdata$`AC$MASS_SPECTROMETRY`$COLLISION_ENERGY
+                mbdata[['RECORD_TITLE_CE']] <- spectrum@info$ces
+		##mbdata[['RECORD_TITLE_CE']] <- mbdata$`AC$MASS_SPECTROMETRY`$COLLISION_ENERGY
 	else
 		mbdata[['RECORD_TITLE_CE']] <- mbdata$`AC$MASS_SPECTROMETRY`$COLLISION_ENERGY
 
@@ -332,15 +336,15 @@ setMethod("buildRecord", "RmbSpectrum2", function(o, ..., cpd = NULL, mbdata = l
 
 
 	# Here is the right place to fix the name of the INTERNAL ID field.
-	if(!is.null(getOption("RMassBank")$annotations$internal_id_fieldname))
-	{
-		id.col <- which(names(mbdata[["COMMENT"]]) == "ID")
-		if(length(id.col) > 0)
-		{
-			names(mbdata[["COMMENT"]])[[id.col]] <-
-			getOption("RMassBank")$annotations$internal_id_fieldname
-		}
-	}
+	############if(!is.null(getOption("RMassBank")$annotations$internal_id_fieldname))
+	###############{
+		###########id.col <- which(names(mbdata[["COMMENT"]]) == "ID")
+		############if(length(id.col) > 0)
+		############{
+			############names(mbdata[["COMMENT"]])[[id.col]] <-
+			############getOption("RMassBank")$annotations$internal_id_fieldname
+		############}
+	###########}
 	# get mode parameter (for accession number generation) depending on version 
 	# of record definition
 	# Generate the title and then delete the temprary RECORD_TITLE_CE field used before
@@ -372,6 +376,21 @@ setMethod("buildRecord", "RmbSpectrum2", function(o, ..., cpd = NULL, mbdata = l
 	{
 		mbdata[['ACCESSION']] <- .standardAccessionBuilder(cpd, subscan)
 	}
+
+	### Add this new value
+        ###AC$CHROMATOGRAPHY:
+        ## adding this line new
+        mbdata[["RECORD_TITLE"]] <- gsub("R=;","",mbdata[["RECORD_TITLE"]])
+
+        LO=c("ACCESSION","RECORD_TITLE","DATE","AUTHORS","LICENSE","PUBLICATION","COMMENT","CH$NAME","CH$COMPOUND_CLASS","CH$FORMULA","CH$EXACT_MASS","CH$SMILES","CH$IUPAC","CH$LINK","AC$INSTRUMENT", "AC$INSTRUMENT_TYPE","AC$MASS_SPECTROMETRY","AC$CHROMATOGRAPHY","MS$FOCUSED_ION","MS$DATA_PROCESSING")	
+        #### This is the original one 
+	######LO=c("ACCESSION","RECORD_TITLE","DATE","AUTHORS","LICENSE","COPYRIGHT","PUBLICATION","COMMENT","CH$NAME","CH$COMPOUND_CLASS","CH$FORMULA","CH$EXACT_MASS","CH$SMILES","CH$IUPAC","CH$LINK","AC$INSTRUMENT", "AC$INSTRUMENT_TYPE","AC$MASS_SPECTROMETRY","AC$CHROMATOGRAPHY","MS$FOCUSED_ION","MS$DATA_PROCESSING")
+
+	##LO=c("ACCESSION","RECORD_TITLE","DATE","AUTHORS","LICENSE","COPYRIGHT","PUBLICATION","COMMENT","CH$NAME","CH$COMPOUND_CLASS","CH$FORMULA","CH$EXACT_MASS","CH$EXACT_MASS","CH$EXACT_MASS","CH$IUPAC","CH$LINK","AC$INSTRUMENT", "AC$INSTRUMENT_TYPE","AC$MASS_SPECTROMETRY","MS$FOCUSED_ION")
+
+	LO1 = match(LO,names(mbdata))
+
+	mbdata = mbdata[LO1]
 
 	spectrum@info <- mbdata
 
