@@ -140,7 +140,7 @@ findMsMsHR <- function(fileName = NULL, msRaw = NULL, cpdID, mode="pH",confirmMo
 		rtLimits <- NA
 	else
 	{
-		dbRt <- findRt(cpdID)
+		dbRt <- tryCatch({findRt(cpdID)},error=function(cond){message("cpdID is empty")})
 		rtLimits <- c(dbRt$RT - rtMargin, dbRt$RT + rtMargin) * 60
 	}
 	spectra <- findMsMsHR.mass(msRaw, mz, mzCoarse, limit.fine, rtLimits, confirmMode + 1,headerCache
@@ -565,11 +565,14 @@ findMsMsHRperxcms.direct <- function(fileName, cpdID, mode="pH", findPeaksArgs =
 	
 		# Find all relevant information for the current cpdID
 		XCMSspectra <- list()
-		RT <- findRt(cpdID[ID])$RT
-		parentMass <- findMz(cpdID[ID], mode=mode)$mzCenter
+		##RT <- findRt(cpdID[ID])$RT
+		RT <- tryCatch({findRt(cpdID[ID])$RT},error=function(cond){message("cpdID[RT] is empty")})
+		parentMass <- tryCatch({findMz(cpdID[ID], mode=mode)$mzCenter},error=function(cond){message("cpdID[ID] is empty")})
 		
 		# Is the information in the compound list?
-		if(is.na(parentMass)){
+		if(sjmisc::is_empty(parentMass)){
+		###if(is.na(parentMass)){
+		  print(cpdID[ID])	
 		  stop(paste("There was no matching entry to the supplied cpdID", cpdID[ID] ,"\n Please check the cpdIDs and the compoundlist."))
 		}
 		
@@ -766,12 +769,16 @@ findMsMsHRperMsp.direct <- function(fileName, cpdIDs, mode="pH") {
     
     # Find all relevant information for the current cpdID
     spectrum <- NULL
-    RT <- findRt(cpdIDs[[idIdx]])$RT 
+    ######RT <- findRt(cpdIDs[[idIdx]])$RT
+    RT <- tryCatch({findRt(cpdIDs[[idIdx]])$RT},error=function(cond){message("RT value has some issues")}) 
 
-    parentMass <- findMz(cpdIDs[[idIdx]], mode=mode)$mzCenter
+    parentMass <- tryCatch({findMz(cpdIDs[[idIdx]], mode=mode)$mzCenter},error=function(cond){message("mz value has some issues")})
     
     # Is the information in the compound list?
-    if(is.na(parentMass)){
+    ###if(is.na(parentMass)){
+       if(sjmisc::is_empty(parentMass)){
+
+	       print(cpdIDs[[idIdx]])
       stop(paste("There was no matching entry to the supplied cpdID"," Please check the cpdIDs and the compoundlist."))
     }
     
@@ -1237,7 +1244,7 @@ addPeaksManually <- function(w, cpdID = NA, handSpec, mode = "pH"){
 				collisionEnergy = 0,
 				tic = 0,
 				peaksCount = nrow(handSpec),
-				rt = findRt(cpdID)$RT,
+				rt = tryCatch({findRt(cpdID)$RT},error=function(cond){message("rt is empty")}),
 				acquisitionNum = as.integer(length(w@spectra[[specIndex]]@children) + 2),
 				centroided = TRUE)
 	return(w)

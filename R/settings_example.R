@@ -191,8 +191,7 @@ NULL
     instrument = "LTQ Orbitrap XL Thermo Scientific",
     instrument_type = "LC-ESI-ITFT",
     confidence_comment = "standard compound",
-    compound_class = "N/A; Environmental Standard",
-    internal_id_fieldname = "INTERNAL_ID",
+    compound_class = "N/A; Environmental Standard",    
 	#
 	# HPLC annotations:
 	#
@@ -288,7 +287,6 @@ NULL
 		  "{AC$INSTRUMENT_TYPE}",
 		  "{AC$MASS_SPECTROMETRY: MS_TYPE}",
 		  "CE: {RECORD_TITLE_CE}",
-		  "R={AC$MASS_SPECTROMETRY: RESOLUTION}",
 		  "{MS$FOCUSED_ION: PRECURSOR_TYPE}"
   ),
 # Define filter settings.

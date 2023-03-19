@@ -31,7 +31,7 @@ parseMbRecord <- function(filename, readAnnotation = TRUE)
   recData[['DATE']] <- format(as.Date(substring(grep('DATE:',record, value = TRUE, fixed = TRUE),7), format = "%Y.%m.%d"), "%Y.%m.%d")
   recData[['AUTHORS']] <- substring(grep('AUTHORS:',record, value = TRUE, fixed = TRUE),10)
   recData[['LICENSE']] <- substring(grep('LICENSE:',record, value = TRUE, fixed = TRUE),10)
-  recData[['COPYRIGHT']] <- substring(grep('COPYRIGHT:',record, value = TRUE, fixed = TRUE),12)
+  ########recData[['COPYRIGHT']] <- substring(grep('COPYRIGHT:',record, value = TRUE, fixed = TRUE),12)
   ##publication <- substring(grep('PUBLICATION:',record, fixed = TRUE),14)
   ##if(length(publication) > 0){
   #mb@compiled_ok[[i]][['PUBLICATION']] <- publication
@@ -214,7 +214,7 @@ parseMbRecord <- function(filename, readAnnotation = TRUE)
   sp@info <- recData
   
   # Read back from Info what was put there from RmbSpectrum2 vanilla
-  sp@info$res <- sp@info[['AC$MASS_SPECTROMETRY']][['RESOLUTION']]
+  ##sp@info$res <- sp@info[['AC$MASS_SPECTROMETRY']][['RESOLUTION']]
   sp@info$ce <- sp@info[['AC$MASS_SPECTROMETRY']][['COLLISION_ENERGY']]
   sp@info$mode <- sp@info[['AC$MASS_SPECTROMETRY']][['FRAGMENTATION_MODE']]
   sp@collisionEnergy <- as.numeric(gsub("([0-9]+).*", "\\1", sp@info$ce, perl=TRUE))

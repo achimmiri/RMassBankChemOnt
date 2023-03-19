@@ -39,10 +39,12 @@ loadList <- function(path, listEnv = NULL, check = TRUE)
   		stop("The supplied file does not exist, please supply a correct path")
           
     # Try out if the file is comma- or semicolon-separated
-    compoundList <- read.csv(path, stringsAsFactors=FALSE, check.names=FALSE)
+    ##compoundList <- read.csv(path, stringsAsFactors=FALSE, check.names=FALSE)
+     compoundList <- read.csv2(path,sep=",",stringsAsFactors=FALSE, check.names=FALSE)	
   	n <- colnames(compoundList)
     if(!("ID" %in% n)){ # If no ID column, it must be semicolon separated
-        compoundList <- read.csv2(path, stringsAsFactors=FALSE, check.names=FALSE)
+        ###compoundList <- read.csv2(path, stringsAsFactors=FALSE, check.names=FALSE)
+        compoundList <- read.csv2(path,sep=",",stringsAsFactors=FALSE, check.names=FALSE)	    
         n <- colnames(compoundList)
         if(!("ID" %in% n)){ # ...or there must be something wrong with the column names
              stop("There is no 'ID' column in the compound list")
@@ -722,7 +724,8 @@ findRt <- function(cpdID) {
 		stop("Compound list must be loaded first.")
 	if(is.character(cpdID))
 		cpdID <- as.numeric(cpdID)
-	rt <- as.numeric(.listEnvEnv$listEnv$compoundList[which(.listEnvEnv$listEnv$compoundList$ID == cpdID),"RT"])
+	rt <- tryCatch({as.numeric(.listEnvEnv$listEnv$compoundList[cpdID,][["RT"]])},error=function(cond){message("Rt value has some problem")})
+	######rt <- as.numeric(.listEnvEnv$listEnv$compoundList[which(.listEnvEnv$listEnv$compoundList$ID == cpdID),"RT"])
 	if(!is.null(getOption("RMassBank")$rtShift))
 		rt <- rt + getOption("RMassBank")$rtShift
 	if(is.na(rt)) return(list(RT=NA))
@@ -737,9 +740,14 @@ findSmiles <- function(cpdID) {
 		stop("Compound list must be loaded first.")
 	if(!exists("compoundList", where=.listEnvEnv$listEnv))
 		stop("Compound list must be loaded first.")
-  if(.listEnvEnv$listEnv$compoundList[match(cpdID, .listEnvEnv$listEnv$compoundList$ID),"SMILES"] == "")
+  if(sjmisc::is_empty(tryCatch({.listEnvEnv$listEnv$compoundList[cpdID,][["SMILES"]]},error=function(cond){message("SMILES value some problem")}))){  	
+  ##if(.listEnvEnv$listEnv$compoundList[match(cpdID, .listEnvEnv$listEnv$compoundList$ID),"SMILES"] == "")
     return(NA)
-	return(.listEnvEnv$listEnv$compoundList[match(cpdID, .listEnvEnv$listEnv$compoundList$ID),"SMILES"])
+  }else{
+	  return(tryCatch({.listEnvEnv$listEnv$compoundList[cpdID,][["SMILES"]]},error=function(cond){message("SMILES value some problem")}))
+
+   }
+	##return(.listEnvEnv$listEnv$compoundList[match(cpdID, .listEnvEnv$listEnv$compoundList$ID),"SMILES"])
 }
 
 #' @export
@@ -747,7 +755,8 @@ findFormula <- function(cpdID, retrieval = "standard") {
     
     # In case of tentative: read formula from table
     if(retrieval=="tentative"){
-        return(.listEnvEnv$listEnv$compoundList[which(.listEnvEnv$listEnv$compoundList$ID == cpdID),"Formula"])
+	return(tryCatch({.listEnvEnv$listEnv$compoundList[cpdID,][["Formula"]]},error=function(cond){message("Formula value some problem")}))    
+        ##return(.listEnvEnv$listEnv$compoundList[which(.listEnvEnv$listEnv$compoundList$ID == cpdID),"Formula"])
     }
     
     # Otherwise: Convert smiles to formula
@@ -767,7 +776,8 @@ findCAS <- function(cpdID) {
 		stop("Compound list must be loaded first.")
 	if(!exists("compoundList", where=.listEnvEnv$listEnv))
 		stop("Compound list must be loaded first.")
-	return(.listEnvEnv$listEnv$compoundList[which(.listEnvEnv$listEnv$compoundList$ID == cpdID),"CAS"])
+	##return(.listEnvEnv$listEnv$compoundList[which(.listEnvEnv$listEnv$compoundList$ID == cpdID),"CAS"])
+	return(tryCatch({.listEnvEnv$listEnv$compoundList[cpdID,][["CAS"]]},error=function(cond){message("Formula value some problem")}))
 }
 
 #' @export

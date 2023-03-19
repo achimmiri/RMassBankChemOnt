@@ -352,10 +352,14 @@ msmsRead.RAW <- function(w, xRAW = NULL, cpdids = NULL, mode, findPeaksArgs = NU
 		stop(paste("There was no matching entry to the supplied cpdID", cpdids[1] ,"\n Please check the cpdIDs and the compoundlist."))
 	}
 		
-	RT <- findRt(cpdids[1])$RT
+	###tryCatch({length(Fpea)},error=function(cond){message("Fpea is empty")})
+	##RT <- findRt(cpdids[1])$RT
+        RT <- tryCatch({findRt(cpdids[1])$RT},error=function(cond){return(0)})
+
 	mzabs <- 0.1
 	
 	getRT <- function(xa) {
+		##rt <- sapply(xa@pspectra, function(x) {median(peaks(xa@xcmsSet)[x, "rt"])})
 		rt <- sapply(xa@pspectra, function(x) {median(peaks(xa@xcmsSet)[x, "rt"])})
 	}
 	
